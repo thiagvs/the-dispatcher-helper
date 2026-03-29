@@ -24,7 +24,8 @@ const companies = {
 };
 
 export default function App() {
-  const [company, setCompany] = useState("");
+  type CompanyCode = keyof typeof companies;
+  const [company, setCompany] = useState<CompanyCode | "">("");
   const [aircraft, setAircraft] = useState("");
 
   const renderAircraft = () => {
@@ -50,7 +51,7 @@ export default function App() {
       <h2>Load Control - The Dispatcher Helper</h2>
 
       {/* Companhia */}
-      <select onChange={(e) => setCompany(e.target.value)}>
+      <select onChange={(e) => setCompany(e.target.value as CompanyCode)}>
         {Object.entries(companies).map(([code, c]) => (
           <option key={code} value={code}>
             {code} - {c.name}
