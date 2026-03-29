@@ -66,7 +66,7 @@ export default function App() {
         onChange={(e) => setAircraft(e.target.value)}
       >
         {company &&
-          companies[company].aircrafts.map((a) => (
+          companies[company].aircrafts.map((a: any) => (
             <option key={a} value={a}>
               {a}
             </option>
