@@ -1,71 +1,61 @@
 import { useEffect, useState } from "react";
 
-export default function TransaviaA320() {
-    const [total, setTotal] = useState("");
-    const [h1, setH1] = useState(0);
-    const [h3, setH3] = useState(0);
+interface GenericProps {
+    pesoMedio: number;
+    totalBags: number;
+}
 
-    const [h4Animals, setH4Animals] = useState(0);
-    const [h5Animals, setH5Animals] = useState(0);
+export default function TransaviaA320({ pesoMedio, totalBags }: GenericProps) {
+    // Mantemos apenas os estados das malas
+    const [h4, setH4] = useState(0);
+    const [h5, setH5] = useState(0);
+    const [h1, setH1] = useState(0);
 
     useEffect(() => {
-        const res = calcA320(Number(total));
-        setH1(res.h1);
-        setH3(res.h3);
-    }, [total]);
+        // Fazemos o cálculo de distribuição
+        if (!pesoMedio || totalBags <= 0) {
+            setH4(0); setH5(0); setH1(0);
+            return;
+        }
 
-    function calcA320(totalBags: number) {
-        if (!totalBags) return { h1: 0, h3: 0 };
+        // 1. Limites de malas baseados no peso máximo permitido de cada porão
+        const maxH4 = Math.floor(1350 / pesoMedio);
+        const maxH5 = Math.floor(400 / pesoMedio);
 
-        return {
-            h1: Math.ceil(totalBags / 2), // prioridade
-            h3: Math.floor(totalBags / 2),
-        };
-    }
+        // 2. Distribuição real (respeitando o total de malas do voo)
+        const realH4 = Math.min(maxH4, totalBags);
+        const realH5 = Math.min(maxH5, totalBags - realH4);
+        const realH1 = totalBags - realH4 - realH5;
+
+        // Atualiza os estados
+        setH4(realH4);
+        setH5(realH5);
+        setH1(realH1);
+        
+    }, [pesoMedio, totalBags]);
+
+    // Calculamos o peso em tempo real durante a renderização 
+    // Isso garante que o peso sempre condiz com o número de bags na tela
+    const pesoH4 = Math.round(h4 * pesoMedio);
+    const pesoH5 = Math.round(h5 * pesoMedio);
+    const pesoH1 = Math.round(h1 * pesoMedio);
 
     return (
-        <div>
+        <div style={{ padding: "15px", border: "1px solid #ccc", borderRadius: "8px" }}>
             <h3>A320 (Transavia)</h3>
-
-            <input
-                type="number"
-                placeholder="Total de malas"
-                value={total}
-                onChange={(e) => setTotal(e.target.value)}
-            />
-            <br /><br />
-
-            <div><strong>H1:</strong> {h1}</div>
-            <div><strong>H3:</strong> {h3}</div>
-            <br />
-
-            <h4>Animais</h4>
-
-            <input
-                type="number"
-                placeholder="H4 animais"
-                value={h4Animals}
-                onChange={(e) => setH4Animals(Number(e.target.value))}
-            />
-            <br /><br />
-            <input
-                type="number"
-                placeholder="H5 animais"
-                value={h5Animals}
-                onChange={(e) => setH5Animals(Number(e.target.value))}
-            />
-            <br /><br />
-
             <div>
                 <strong>Resumo:</strong>
                 <br />
-                H1: {h1} bags
+                H4: {h4} bags || Peso: {pesoH4} kg
                 <br />
-                H3: {h3} bags
+                H5: {h5} bags || Peso: {pesoH5} kg
                 <br />
-                H4: {h4Animals} animais
-                <br />
-                H5: {h5Animals} animais
+                H1: {h1} bags || Peso: {pesoH1} kg
+                <hr />
+                <strong>Total: {h4 + h5 + h1} bags || {Math.round(pesoH4 + pesoH5 + pesoH1)} kg</strong>
+
+                <hr />
+                <strong>Regra utilizada: H4 1350 kg · H5 400 kg · H1 rest</strong>
             </div>
         </div>
     );

@@ -11,11 +11,11 @@ const OperationalTips: React.FC = () => {
         </h3>
         <div className="space-y-2">
           <div className="flex justify-between border-b border-gray-800 pb-1">
-            <span className="font-bold">B737</span>
+            <span className="font-bold">B737 </span>
             <span>Dianteiro <span className="text-orange-500 font-medium ml-1">(Cuidado Aft)</span></span>
           </div>
           <div className="flex justify-between border-b border-gray-800 pb-1">
-            <span className="font-bold">A320</span>
+            <span className="font-bold">A320 </span>
             <span>Neutro / Flexível</span>
           </div>
           <div className="flex justify-between border-b border-gray-800 pb-1">
