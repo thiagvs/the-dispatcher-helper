@@ -17,24 +17,47 @@ export default function TransaviaA321({ pesoMedio, totalBags, pesoTotal }: Gener
             return;
         }
 
-        let resH1 = 0, resH3 = 0, resH4 = 0;
-
         if (pesoTotal <= 800) {
-            resH3 = totalBags;
+            setH1(0); setH4(0); setH3(totalBags);
         } else {
-            resH1 = Math.floor(totalBags * 0.30);
-            resH4 = Math.floor(totalBags * 0.30);
-            resH3 = totalBags - (resH1 + resH4);
-        }
+            const porcoes = [
+                { id: "h1", percent: 0.30 },
+                { id: "h3", percent: 0.40 },
+                { id: "h4", percent: 0.30 }
+            ];
 
-        setH1(resH1);
-        setH3(resH3);
-        setH4(resH4);
+            const calculados = porcoes.map(p => {
+                const exato = totalBags * p.percent;
+                return {
+                    id: p.id,
+                    inteiro: Math.floor(exato),
+                    decimal: exato - Math.floor(exato)
+                };
+            });
+
+
+            const somaInteiros = calculados.reduce((acc, curr) => acc + curr.inteiro, 0);
+            let faltam = totalBags - somaInteiros;
+
+            const ordenadosPorDecimal = [...calculados].sort((a, b) => b.decimal - a.decimal);
+
+            for (let i = 0; i < faltam; i++) {
+                const poraoAlvo = ordenadosPorDecimal[i].id;
+                const index = calculados.findIndex(c => c.id === poraoAlvo);
+                calculados[index].inteiro += 1;
+            }
+
+            setH1(calculados.find(c => c.id === "h1")?.inteiro || 0);
+            setH3(calculados.find(c => c.id === "h3")?.inteiro || 0);
+            setH4(calculados.find(c => c.id === "h4")?.inteiro || 0);
+        }
     }, [pesoMedio, totalBags, pesoTotal]);
 
+    // --- CÁLCULO DOS PESOS (Mantendo a precisão do Peso Total) ---
     const pH1 = Math.round(h1 * pesoMedio);
     const pH4 = Math.round(h4 * pesoMedio);
-    const pH3 = (totalBags > 0) ? (pesoTotal - (pH1 + pH4)) : 0;
+    // H3 continua sendo o fiel da balança para o peso bater com o digitado
+    const pH3 = totalBags > 0 ? (pesoTotal - (pH1 + pH4)) : 0;
 
     return (
         <div style={{ padding: "15px", border: "2px solid #00d66c", borderRadius: "8px", backgroundColor: "#121212", color: "#fff" }}>
