@@ -48,19 +48,19 @@ export default function App() {
   };
 
   const renderAircraft = () => {
-    if (!company || !aircraft) return null; 
+    if (!company || !aircraft) return null;
 
     if (company === "TVF" && aircraft === "B737-800") return <TransaviaB737 />;
-    if (company === "TVF" && aircraft === "A320") return <TransaviaA320 pesoMedio={pesoMedio} totalBags={totalBags}/>;
+    if (company === "TVF" && aircraft === "A320") return <TransaviaA320 pesoMedio={pesoMedio} totalBags={totalBags} />;
     if (company === "TVF" && aircraft === "A321") return <TransaviaA321 pesoMedio={pesoMedio} totalBags={totalBags} pesoTotal={pesoTotal} />;
 
     if (company === "EZY" && aircraft === "A319") return <EasyJetA319 />;
     if (company === "EZY" && aircraft === "A320") return <EasyJetA320 />;
     if (company === "EZY" && aircraft === "A321") return <EasyJetA321 />;
 
-    if (company === "EWG" && aircraft === "A319") return <EurowingsA319 pesoMedio={pesoMedio} totalBags={totalBags} />;
-    if (company === "EWG" && aircraft === "A320") return <EurowingsA320 pesoMedio={pesoMedio} totalBags={totalBags} />;
-    if (company === "EWG" && aircraft === "A321") return <EurowingsA321 pesoMedio={pesoMedio} totalBags={totalBags}/>;
+    if (company === "EWG" && aircraft === "A319") return <EurowingsA319 pesoMedio={pesoMedio} totalBags={totalBags} pesoTotal={pesoTotal} />;
+    if (company === "EWG" && aircraft === "A320") return <EurowingsA320 pesoMedio={pesoMedio} totalBags={totalBags} pesoTotal={pesoTotal} />;
+    if (company === "EWG" && aircraft === "A321") return <EurowingsA321 pesoMedio={pesoMedio} totalBags={totalBags} pesoTotal={pesoTotal} />;
 
     return null;
   };
