@@ -60,8 +60,8 @@ export default function TransaviaA321({ pesoMedio, totalBags, pesoTotal }: Gener
     const pH3 = totalBags > 0 ? (pesoTotal - (pH1 + pH4)) : 0;
 
     return (
-        <div style={{ padding: "15px", border: "2px solid #00d66c", borderRadius: "8px", backgroundColor: "#121212", color: "#fff" }}>
-            <h3 style={{ color: "#00d66c", marginTop: 0 }}>A321 (Transavia)</h3>
+        <div style={{ padding: "15px", border: "2px solid #00ab61", borderRadius: "8px", backgroundColor: "#121212", color: "#fff" }}>
+            <h3 style={{ color: "#00ab61", marginTop: 0 }}>A321 (Transavia)</h3>
 
             <div style={{
                 marginBottom: "15px", padding: "8px", borderRadius: "5px", textAlign: "center", fontWeight: "bold",

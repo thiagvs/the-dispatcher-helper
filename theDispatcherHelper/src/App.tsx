@@ -29,34 +29,90 @@ const companies = {
 export default function App() {
   type CompanyCode = keyof typeof companies;
 
+  type SpecialLoad = {
+    id: string;
+    type: "AVIH" | "WCH";
+    weight: number;
+  };
+
   const [company, setCompany] = useState<CompanyCode | "">("");
   const [aircraft, setAircraft] = useState("");
   const [pesoTotal, setPesoTotal] = useState(0);
   const [totalBags, setTotalBags] = useState(0);
+  const [specialLoads, setSpecialLoads] = useState<SpecialLoad[]>([]);
+  const [tempType, setTempType] = useState<"AVIH" | "WCH">("AVIH");
+  const [tempWeight, setTempWeight] = useState(0);
+  const [pesoDistribuivel, setPesoDistribuivel] = useState(0);
   const [pesoMedio, setPesoMedio] = useState(0);
 
+  const recalculateWeights = (loads: SpecialLoad[], currentPesoTotal: number, currentTotalBags: number) => {
+    const pesoEspecial = loads.reduce((acc, item) => acc + item.weight, 0);
+    const distribuivel = Math.max(currentPesoTotal - pesoEspecial, 0);
+    setPesoDistribuivel(distribuivel);
+  
+    if (distribuivel > 0 && currentTotalBags > 0) {
+      const valor = distribuivel / currentTotalBags;
+      setPesoMedio(parseFloat(valor.toFixed(1)));
+    } else {
+      setPesoMedio(0);
+    }
+  };
+
+  // Update weights when totalBags or pesoTotal changes
   useEffect(() => {
-    let valor = 0;
-    if (pesoTotal !== 0 || totalBags !== 0)
-      valor = pesoTotal / totalBags;
-    setPesoMedio(parseFloat(valor.toFixed(1)));
-  }, [pesoTotal, totalBags])
+    recalculateWeights(specialLoads, pesoTotal, totalBags);
+  }, [pesoTotal, totalBags, specialLoads])
 
   const handleCompanyChange = (value: string) => {
     setCompany(value as CompanyCode);
     setAircraft("");
   };
 
+  const handleAddSpecialLoad = () => {
+    if (!tempWeight) {
+      alert('Não há peso ou porão selecionados');
+      return;
+    }
+
+    if (!aircraft || !company) {
+      alert('Selecione o avião');
+      return;
+    }
+
+    const newLoad: SpecialLoad = {
+      id: crypto.randomUUID(),
+      type: tempType,
+      weight: tempWeight,
+    };
+
+    setSpecialLoads((prev) => {
+      const updated = [...prev, newLoad];
+      recalculateWeights(updated, pesoTotal, totalBags);
+      return updated;
+    });
+    
+    setTempWeight(0);
+  };
+
+  const handleRemoveSpecialLoad = (id: string) => {
+    setSpecialLoads((prev) => {
+      const updated = prev.filter((l) => l.id !== id);
+      recalculateWeights(updated, pesoTotal, totalBags);
+      return updated;
+    });
+  };
+
+
   const renderAircraft = () => {
     if (!company || !aircraft) return null;
 
-    if (company === "TVF" && aircraft === "B737-800") return <TransaviaB737 />;
-    if (company === "TVF" && aircraft === "A320") return <TransaviaA320 pesoMedio={pesoMedio} totalBags={totalBags} />;
+    if (company === "TVF" && aircraft === "B737-800") return <TransaviaB737 pesoMedio={pesoMedio} totalBags={totalBags} pesoTotal={pesoTotal} />;
+    if (company === "TVF" && aircraft === "A320") return <TransaviaA320 pesoMedio={pesoMedio} totalBags={totalBags}  pesoTotal={pesoTotal} />;
     if (company === "TVF" && aircraft === "A321") return <TransaviaA321 pesoMedio={pesoMedio} totalBags={totalBags} pesoTotal={pesoTotal} />;
 
-    if (company === "EZY" && aircraft === "A319") return <EasyJetA319 />;
-    if (company === "EZY" && aircraft === "A320") return <EasyJetA320 />;
-    if (company === "EZY" && aircraft === "A321") return <EasyJetA321 />;
+    if (company === "EZY" && aircraft === "A319") return <EasyJetA319 pesoMedio={pesoMedio} totalBags={totalBags} pesoTotal={pesoTotal} />;
+    if (company === "EZY" && aircraft === "A320") return <EasyJetA320 pesoMedio={pesoMedio} totalBags={totalBags} pesoTotal={pesoTotal} />;
+    if (company === "EZY" && aircraft === "A321") return <EasyJetA321 pesoMedio={pesoMedio} totalBags={totalBags} pesoTotal={pesoTotal} />;
 
     if (company === "EWG" && aircraft === "A319") return <EurowingsA319 pesoMedio={pesoMedio} totalBags={totalBags} pesoTotal={pesoTotal} />;
     if (company === "EWG" && aircraft === "A320") return <EurowingsA320 pesoMedio={pesoMedio} totalBags={totalBags} pesoTotal={pesoTotal} />;
@@ -64,6 +120,7 @@ export default function App() {
 
     return null;
   };
+
 
   return (
     <div style={{ padding: 20 }}>
@@ -124,9 +181,70 @@ export default function App() {
         }
       </div>
 
-      <hr />
+      <div className="bg-gray-50 p-4 rounded-xl shadow-sm mb-6">
+        <h3 className="font-semibold text-gray-700 mb-3">📦 Cargas especiais</h3>
+
+        <div className="grid grid-cols-3 gap-3 mb-3">
+          <p>Categoria: </p>
+          <select
+            value={tempType}
+            onChange={(e) => setTempType(e.target.value as any)}
+            className="p-2 border rounded-lg"
+          >
+            <option value="AVIH">AVIH</option>
+            <option value="WCMP">Cadeira manual (sem bateria)</option>
+            <option value="WCBD">Cadeira com bateria seca (dry cell)</option>
+            <option value="WCBW">Cadeira com bateria molhada (wet cell)</option>
+            <option value="WCMP">Cadeira com bateria de lítio</option>
+          </select>
+
+          <p>Peso(kgs): </p>
+          <input
+            type="number"
+            placeholder="Peso (kg)"
+            value={tempWeight}
+            onChange={(e) => setTempWeight(Number(e.target.value))}
+            className="p-2 border rounded-lg"
+          />
+        </div>
+
+        <button
+          onClick={handleAddSpecialLoad}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition"
+        >
+          ➕ Confirmar
+        </button>
+      </div>
+
+      <div className="space-y-3 mt-4">
+        {specialLoads.map((item) => (
+          <div
+            key={item.id}
+            className="bg-gray-800 text-white rounded-xl p-3 shadow-md flex flex-col gap-2"
+          >
+            <div className="flex justify-between items-center">
+              <span className="font-semibold text-blue-400">
+                {item.type}
+              </span>
+              <button
+                onClick={() => handleRemoveSpecialLoad(item.id)}
+                className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-sm"
+              >
+                🗑️ Remover
+              </button>
+            </div>
+
+            {/* Linha 2 */}
+            <div className="flex justify-between text-sm">
+              <span className="bg-gray-700 px-2 py-1 rounded-md">
+                ⚖️ {item.weight} kg
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
       <div>{renderAircraft()}</div>
-      <hr />
+
 
       <div className="min-h-screen flex flex-col">
         <main className="flex-grow p-6">

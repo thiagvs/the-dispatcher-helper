@@ -1,17 +1,23 @@
 import { useEffect, useState } from "react";
 
-export default function TransaviaB737() {
-    const [total, setTotal] = useState("");
+interface DefaultProps {
+    pesoMedio: number;
+    totalBags: number;
+    pesoTotal: number
+}
+
+
+export default function TransaviaB737({ pesoMedio, totalBags, pesoTotal }: DefaultProps) {
     const [h2, setH2] = useState(0);
     const [h3, setH3] = useState(0);
 
     useEffect(() => {
-        const res = calcB737(Number(total));
+        const res = calcB737();
         setH2(res.h2);
         setH3(res.h3);
-    }, [total]);
+    }, [pesoMedio, totalBags, pesoTotal]);
 
-    function calcB737(totalBags: number) {
+    function calcB737() {
         if (!totalBags) return { h2: 0, h3: 0 };
         return {
             h2: Math.ceil(totalBags / 2),
@@ -19,21 +25,19 @@ export default function TransaviaB737() {
         };
     }
 
+    const pH2 = Math.round(h2 * pesoMedio);
+    const pH3 = pesoTotal - pH2;
+
     return (
         <div>
-            <h3>B737-800 (Transavia)</h3>
+            <div style={{ padding: "15px", border: "2px solid #00ab61", borderRadius: "8px", backgroundColor: "#121212", color: "#fff" }}>
+                <h3 style={{ color: "#00ab61", marginTop: 0 }}>B737 (Transavia)</h3>
 
-            <input
-                type="number"
-                placeholder="Total de malas"
-                value={total}
-                onChange={(e) => setTotal(e.target.value)}
-            />
-
-            <br /><br />
-
-            <div><strong>Malas destinadas ao H2:</strong> {h2}</div>
-            <div><strong>Malas destinadas ao H3:</strong> {h3}</div>
+                H2 (50%) {h2} bags || Peso: {pH2} kg <br />
+                H3 (50%) {h3} bags || Peso: {pH3} kg <br />
+                <hr />
+                <strong>Total: {totalBags} bags || {pesoTotal} kg</strong>
+            </div>
         </div>
     )
 }

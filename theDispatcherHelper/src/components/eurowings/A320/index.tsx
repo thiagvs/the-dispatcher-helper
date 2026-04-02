@@ -32,13 +32,25 @@ export default function EurowingsA320({ pesoMedio, totalBags, pesoTotal }: Eurow
     const pH4 = totalBags > 0 ? (pesoTotal - (pH1 + pH3)) : 0;
 
     return (
-        <div style={{ padding: "15px", border: "1px solid #ccc", borderRadius: "8px", backgroundColor: "#121212" }}>
-            <h3>A320 (EuroWings)</h3>
-            H1 (Máx 1500kg): {h1} bags || Peso: {pH1} kg <br />
-            H3 (Máx 1000kg): {h3} bags || Peso: {pH3} kg <br />
-            H4 (Restante): {h4} bags || Peso: {pH4} kg <br />
-            <hr />
-            <strong>Total: {totalBags} bags || {pesoTotal} kg</strong>
+        // <div style={{ padding: "15px", border: "1px solid #ccc", borderRadius: "8px", backgroundColor: "#af1e65" }}>
+        //     <h3>A320 (EuroWings)</h3>
+        //     H1 (Máx 1500kg): {h1} bags || Peso: {pH1} kg <br />
+        //     H3 (Máx 1000kg): {h3} bags || Peso: {pH3} kg <br />
+        //     H4 (Restante): {h4} bags || Peso: {pH4} kg <br />
+        //     <hr />
+        //     <strong>Total: {totalBags} bags || {pesoTotal} kg</strong>
+        // </div>
+
+        <div>
+            <div style={{ padding: "15px", border: "2px solid #871c54", borderRadius: "8px", backgroundColor: "#121212", color: "#fff" }}>
+                <h3 style={{ color: "#871c54", marginTop: 0 }}>A320 (EuroWings)</h3>
+                <h3>A320 (EuroWings)</h3>
+                H1 (Máx 1500kg): {h1} bags || Peso: {pH1} kg <br />
+                H3 (Máx 1000kg): {h3} bags || Peso: {pH3} kg <br />
+                H4 (Restante): {h4} bags || Peso: {pH4} kg <br />
+                <hr />
+                <strong>Total: {totalBags} bags || {pesoTotal} kg</strong>
+            </div>
         </div>
     );
 }

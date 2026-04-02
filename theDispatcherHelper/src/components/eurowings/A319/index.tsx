@@ -32,13 +32,19 @@ export default function EurowingsA319({ pesoMedio, totalBags, pesoTotal }: Eurow
     const ph1 = totalBags > 0 ? (pesoTotal - (ph4 + ph5)) : 0;
 
     return (
-        <div style={{ padding: "15px", border: "1px solid #ccc", borderRadius: "8px", backgroundColor: "#121212" }}>
-            <h3>A319 (EuroWings)</h3>
-            H4 (Máx 1350kg): {h4} bags || Peso: {ph4} kg <br />
-            H5 (Máx 400kg): {h5} bags || Peso: {ph5} kg <br />
-            H1 (Restante): {h1} bags || Peso: {ph1} kg <br />
-            <hr />
-            <strong>Total: {totalBags} bags || {pesoTotal} kg</strong>
+        // <div style={{ padding: "15px", border: "1px solid #ccc", borderRadius: "8px", backgroundColor: "#121212" }}>
+        //     <h3>A319 (EuroWings)</h3>
+        //     
+        // </div>
+        <div>
+            <div style={{ padding: "15px", border: "2px solid #871c54", borderRadius: "8px", backgroundColor: "#121212", color: "#fff" }}>
+                <h3 style={{ color: "#871c54", marginTop: 0 }}>A319 (EuroWings)</h3>
+                H4 (Máx 1350kg): {h4} bags || Peso: {ph4} kg <br />
+                H5 (Máx 400kg): {h5} bags || Peso: {ph5} kg <br />
+                H1 (Restante): {h1} bags || Peso: {ph1} kg <br />
+                <hr />
+                <strong>Total: {totalBags} bags || {pesoTotal} kg</strong>
+            </div>
         </div>
     );
 }

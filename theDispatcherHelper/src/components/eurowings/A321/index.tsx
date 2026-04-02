@@ -19,7 +19,7 @@ export default function EurowingsA321({ pesoMedio, totalBags, pesoTotal }: Eurow
 
         // Distribuição equalitária (1/3 para cada)
         const porcoes = [
-            { id: "h1", p: 1/3 }, { id: "h2", p: 1/3 }, { id: "h3", p: 1/3 }
+            { id: "h1", p: 1 / 3 }, { id: "h2", p: 1 / 3 }, { id: "h3", p: 1 / 3 }
         ];
 
         const calculados = porcoes.map(item => {
@@ -49,16 +49,15 @@ export default function EurowingsA321({ pesoMedio, totalBags, pesoTotal }: Eurow
     const ph3 = totalBags > 0 ? (pesoTotal - (ph1 + ph2)) : 0;
 
     return (
-        <div style={{ padding: "15px", border: "1px solid #ccc", borderRadius: "8px", backgroundColor: "#121212" }}>
-            <h3>A321 (EuroWings)</h3>
-            H3: {h3} bags || Peso: {ph3} kg <br />
-            H2: {h2} bags || Peso: {ph2} kg <br />
-            H1: {h1} bags || Peso: {ph1} kg <br />
-
-            <hr />
-            <strong>Total: {totalBags} bags || {pesoTotal} kg</strong>
-            <br />
-            <small>Regra: Distribuição CLC Equalitária</small>
+        <div>
+            <div style={{ padding: "15px", border: "2px solid #871c54", borderRadius: "8px", backgroundColor: "#121212", color: "#fff" }}>
+                <h3 style={{ color: "#871c54", marginTop: 0 }}>A320 (EuroWings)</h3>
+                H3: {h3} bags || Peso: {ph3} kg <br />
+                H2: {h2} bags || Peso: {ph2} kg <br />
+                H1: {h1} bags || Peso: {ph1} kg <br />
+                <hr />
+                <strong>Total: {totalBags} bags || {pesoTotal} kg</strong>
+            </div>
         </div>
     );
 }
