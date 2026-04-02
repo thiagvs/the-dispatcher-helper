@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import OperationalTips from "./components/operationalTips";
 import Footer from "./components/customFooter";
 import TransaviaB737 from "./components/transavia/B737";
