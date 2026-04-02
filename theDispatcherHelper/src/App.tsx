@@ -42,38 +42,26 @@ export default function App() {
   const [specialLoads, setSpecialLoads] = useState<SpecialLoad[]>([]);
   const [tempType, setTempType] = useState<"AVIH" | "WCH">("AVIH");
   const [tempWeight, setTempWeight] = useState(0);
-  const [pesoMedio, setPesoMedio] = useState(0);
-
-  const recalculateWeights = (loads: SpecialLoad[], currentPesoTotal: number, currentTotalBags: number) => {
-    const pesoEspecial = loads.reduce((acc, item) => acc + item.weight, 0);
-    const distribuivel = Math.max(currentPesoTotal - pesoEspecial, 0);
-  
-    if (distribuivel > 0 && currentTotalBags > 0) {
-      const valor = distribuivel / currentTotalBags;
-      setPesoMedio(parseFloat(valor.toFixed(1)));
-    } else {
-      setPesoMedio(0);
-    }
-  };
-
-  // Update weights when totalBags or pesoTotal changes
-  useEffect(() => {
-    recalculateWeights(specialLoads, pesoTotal, totalBags);
-  }, [pesoTotal, totalBags, specialLoads])
 
   const handleCompanyChange = (value: string) => {
     setCompany(value as CompanyCode);
     setAircraft("");
   };
 
-  const handleAddSpecialLoad = () => {
-    if (!tempWeight) {
-      alert('Não há peso ou porão selecionados');
-      return;
-    }
+  // 1. Soma de todas as cargas especiais
+  const pesoTotalEspecial = specialLoads.reduce((acc, item) => acc + item.weight, 0);
 
-    if (!aircraft || !company) {
-      alert('Selecione o avião');
+  // 2. Peso que sobra para as malas comuns (Peso Líquido)
+  const pesoRestanteParaMalas = Math.max(pesoTotal - pesoTotalEspecial, 0);
+
+  // 3. Cálculo do Peso Médio atualizado
+  const pesoMedio = totalBags > 0 
+  ? parseFloat((pesoRestanteParaMalas / totalBags).toFixed(1)) 
+  : 0;
+
+  const handleAddSpecialLoad = () => {
+    if (!tempWeight || !aircraft || !company) {
+      alert('Preencha os dados da carga e selecione o avião');
       return;
     }
 
@@ -83,38 +71,39 @@ export default function App() {
       weight: tempWeight,
     };
 
-    setSpecialLoads((prev) => {
-      const updated = [...prev, newLoad];
-      recalculateWeights(updated, pesoTotal, totalBags);
-      return updated;
-    });
-    
+    setSpecialLoads((prev) => [...prev, newLoad]);
     setTempWeight(0);
-  };
-
-  const handleRemoveSpecialLoad = (id: string) => {
-    setSpecialLoads((prev) => {
-      const updated = prev.filter((l) => l.id !== id);
-      recalculateWeights(updated, pesoTotal, totalBags);
-      return updated;
-    });
   };
 
 
   const renderAircraft = () => {
     if (!company || !aircraft) return null;
 
-    if (company === "TVF" && aircraft === "B737-800") return <TransaviaB737 pesoMedio={pesoMedio} totalBags={totalBags} pesoTotal={pesoTotal} />;
-    if (company === "TVF" && aircraft === "A320") return <TransaviaA320 pesoMedio={pesoMedio} totalBags={totalBags}  pesoTotal={pesoTotal} />;
-    if (company === "TVF" && aircraft === "A321") return <TransaviaA321 pesoMedio={pesoMedio} totalBags={totalBags} pesoTotal={pesoTotal} />;
+    // Criamos um objeto com as props para não repetir em todos os ifs
+    // IMPORTANTE: Passamos o pesoRestanteParaMalas, não o pesoTotal bruto
+    const aircraftProps = {
+      pesoMedio: pesoMedio,
+      totalBags: totalBags,
+      pesoTotal: pesoRestanteParaMalas
+    };
 
-    if (company === "EZY" && aircraft === "A319") return <EasyJetA319 pesoMedio={pesoMedio} totalBags={totalBags} pesoTotal={pesoTotal} />;
-    if (company === "EZY" && aircraft === "A320") return <EasyJetA320 pesoMedio={pesoMedio} totalBags={totalBags} pesoTotal={pesoTotal} />;
-    if (company === "EZY" && aircraft === "A321") return <EasyJetA321 pesoMedio={pesoMedio} totalBags={totalBags} pesoTotal={pesoTotal} />;
+    if (company === "TVF") {
+      if (aircraft === "B737-800") return <TransaviaB737 {...aircraftProps} />;
+      if (aircraft === "A320") return <TransaviaA320 {...aircraftProps} />;
+      if (aircraft === "A321") return <TransaviaA321 {...aircraftProps} />;
+    }
 
-    if (company === "EWG" && aircraft === "A319") return <EurowingsA319 pesoMedio={pesoMedio} totalBags={totalBags} pesoTotal={pesoTotal} />;
-    if (company === "EWG" && aircraft === "A320") return <EurowingsA320 pesoMedio={pesoMedio} totalBags={totalBags} pesoTotal={pesoTotal} />;
-    if (company === "EWG" && aircraft === "A321") return <EurowingsA321 pesoMedio={pesoMedio} totalBags={totalBags} pesoTotal={pesoTotal} />;
+    if (company === "EZY") {
+      if (aircraft === "A319") return <EasyJetA319 {...aircraftProps} />;
+      if (aircraft === "A320") return <EasyJetA320 {...aircraftProps} />;
+      if (aircraft === "A321") return <EasyJetA321 {...aircraftProps} />;
+    }
+
+    if (company === "EWG") {
+      if (aircraft === "A319") return <EurowingsA319 {...aircraftProps} />;
+      if (aircraft === "A320") return <EurowingsA320 {...aircraftProps} />;
+      if (aircraft === "A321") return <EurowingsA321 {...aircraftProps} />;
+    }
 
     return null;
   };
@@ -224,12 +213,6 @@ export default function App() {
               <span className="font-semibold text-blue-400">
                 {item.type}
               </span>
-              <button
-                onClick={() => handleRemoveSpecialLoad(item.id)}
-                className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-sm"
-              >
-                🗑️ Remover
-              </button>
             </div>
 
             {/* Linha 2 */}
@@ -240,6 +223,12 @@ export default function App() {
             </div>
           </div>
         ))}
+      </div>
+      <div style={{ marginTop: 10, padding: 10, borderRadius: 8 }}>
+        <p><strong>Resumo do Cálculo:</strong></p>
+        <p>Total Cargas Especiais: {pesoTotalEspecial} kg</p>
+        <p>Peso para Distribuir (Malas): {pesoRestanteParaMalas} kg</p>
+        <p><strong>Peso Médio Final: {pesoMedio} kg</strong></p>
       </div>
       <div>{renderAircraft()}</div>
 
