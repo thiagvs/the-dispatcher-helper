@@ -42,13 +42,11 @@ export default function App() {
   const [specialLoads, setSpecialLoads] = useState<SpecialLoad[]>([]);
   const [tempType, setTempType] = useState<"AVIH" | "WCH">("AVIH");
   const [tempWeight, setTempWeight] = useState(0);
-  const [pesoDistribuivel, setPesoDistribuivel] = useState(0);
   const [pesoMedio, setPesoMedio] = useState(0);
 
   const recalculateWeights = (loads: SpecialLoad[], currentPesoTotal: number, currentTotalBags: number) => {
     const pesoEspecial = loads.reduce((acc, item) => acc + item.weight, 0);
     const distribuivel = Math.max(currentPesoTotal - pesoEspecial, 0);
-    setPesoDistribuivel(distribuivel);
   
     if (distribuivel > 0 && currentTotalBags > 0) {
       const valor = distribuivel / currentTotalBags;
