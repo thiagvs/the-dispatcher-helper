@@ -1,15 +1,6 @@
 import { useState } from "react";
 import OperationalTips from "./components/operationalTips";
 import Footer from "./components/customFooter";
-import TransaviaB737 from "./components/transavia/B737";
-import TransaviaA320 from "./components/transavia/A320";
-import TransaviaA321 from "./components/transavia/A321";
-import EasyJetA319 from "./components/easyJet/A319";
-import EasyJetA320 from "./components/easyJet/A320";
-import EasyJetA321 from "./components/easyJet/A321";
-import EurowingsA321 from "./components/eurowings/A321";
-import EurowingsA319 from "./components/eurowings/A319";
-import EurowingsA320 from "./components/eurowings/A320";
 
 const companies = {
   EZY: {
@@ -26,222 +17,308 @@ const companies = {
   },
 };
 
+type SpecialLoad = {
+  id: string;
+  type: "AVIH" | "WCMP" | "WCBD" | "WCBW" | "WCLB";
+  weight: number;
+};
+
+type Distribution = {
+  sequence: LoadingStep[];
+  regraGeral: string;
+};
+
+type LoadingStep = {
+  hold: string;
+  ruleLabel: string;
+  pcs: number;
+  weight: number;
+  isSpecialOnly?: boolean;
+};
+
 export default function App() {
-  type CompanyCode = keyof typeof companies;
-
-  type SpecialLoad = {
-    id: string;
-    type: "AVIH" | "WCH";
-    weight: number;
-  };
-
-  const [company, setCompany] = useState<CompanyCode | "">("");
+  const [company, setCompany] = useState<keyof typeof companies | "">("");
   const [aircraft, setAircraft] = useState("");
-  const [pesoTotal, setPesoTotal] = useState(0);
-  const [totalBags, setTotalBags] = useState(0);
+  const [pesoTotal, setPesoTotal] = useState<number | "">("");
+  const [totalBags, setTotalBags] = useState<number | "">("");
   const [specialLoads, setSpecialLoads] = useState<SpecialLoad[]>([]);
-  const [tempType, setTempType] = useState<"AVIH" | "WCH">("AVIH");
-  const [tempWeight, setTempWeight] = useState(0);
+  const [tempType, setTempType] = useState<"AVIH" | "WCMP" | "WCBD" | "WCBW" | "WCLB">("AVIH");
+  const [tempWeight, setTempWeight] = useState<number | "">("");
 
-  const handleCompanyChange = (value: string) => {
-    setCompany(value as CompanyCode);
-    setAircraft("");
-  };
-
-  // 1. Soma de todas as cargas especiais
-  const pesoTotalEspecial = specialLoads.reduce((acc, item) => acc + item.weight, 0);
-
-  // 2. Peso que sobra para as malas comuns (Peso Líquido)
-  const pesoRestanteParaMalas = Math.max(pesoTotal - pesoTotalEspecial, 0);
-
-  // 3. Cálculo do Peso Médio atualizado
-  const pesoMedio = totalBags > 0 
-  ? parseFloat((pesoRestanteParaMalas / totalBags).toFixed(1)) 
-  : 0;
-
-  const handleAddSpecialLoad = () => {
-    if (!tempWeight || !aircraft || !company) {
-      alert('Preencha os dados da carga e selecione o avião');
-      return;
-    }
-
-    const newLoad: SpecialLoad = {
-      id: crypto.randomUUID(),
-      type: tempType,
-      weight: tempWeight,
-    };
-
-    setSpecialLoads((prev) => [...prev, newLoad]);
-    setTempWeight(0);
-  };
-
-
-  const renderAircraft = () => {
+  const getDistribution = (): Distribution | null => {
     if (!company || !aircraft) return null;
 
-    // Criamos um objeto com as props para não repetir em todos os ifs
-    // IMPORTANTE: Passamos o pesoRestanteParaMalas, não o pesoTotal bruto
-    const aircraftProps = {
-      pesoMedio: pesoMedio,
-      totalBags: totalBags,
-      pesoTotal: pesoRestanteParaMalas
-    };
+    const bags = Number(totalBags) || 0;
+    const weight = Number(pesoTotal) || 0;
+    const avih = specialLoads.filter(l => l.type === "AVIH").reduce((acc, curr) => acc + curr.weight, 0);
+    const wch = specialLoads.filter(l => l.type !== "AVIH").reduce((acc, curr) => acc + curr.weight, 0);
+
+    let seq: LoadingStep[] = [];
+    let regraGeral = "";
 
     if (company === "TVF") {
-      if (aircraft === "B737-800") return <TransaviaB737 {...aircraftProps} />;
-      if (aircraft === "A320") return <TransaviaA320 {...aircraftProps} />;
-      if (aircraft === "A321") return <TransaviaA321 {...aircraftProps} />;
+      if (aircraft === "B737-800") {
+        regraGeral = "H1 heavy · H2 50% · H3 50%";
+        if (avih > 0) seq.push({ hold: "H1", ruleLabel: "Heavy/AVIH", pcs: 0, weight: avih, isSpecialOnly: true });
+        seq.push({ hold: "H2", ruleLabel: "50% Bags", pcs: Math.ceil(bags / 2), weight: Math.ceil(weight / 2) });
+        seq.push({ hold: "H3", ruleLabel: "50% Bags", pcs: Math.floor(bags / 2), weight: Math.floor(weight / 2) });
+        if (wch > 0) seq.push({ hold: "H4", ruleLabel: "WCH", pcs: 0, weight: wch, isSpecialOnly: true });
+      } else if (aircraft === "A320") {
+        regraGeral = "H1 50% · H3 50% · H4/H5 AVIH";
+        seq.push({ hold: "H1", ruleLabel: "50% Bags", pcs: Math.ceil(bags / 2), weight: Math.ceil(weight / 2) });
+        seq.push({ hold: "H3", ruleLabel: "50% Bags", pcs: Math.floor(bags / 2), weight: Math.floor(weight / 2) });
+        if (avih > 0 || wch > 0) seq.push({ hold: "H4/H5", ruleLabel: "Especiais", pcs: 0, weight: avih + wch, isSpecialOnly: true });
+      } else if (aircraft === "A321") {
+        if (weight <= 800) {
+          regraGeral = "≤ 800 kg H3 prioritário";
+          seq.push({ hold: "H3", ruleLabel: "Prioritário", pcs: bags, weight: weight });
+          if (avih > 0 || wch > 0) seq.push({ hold: "H5", ruleLabel: "AVIH/WCH", pcs: 0, weight: avih + wch, isSpecialOnly: true });
+        } else {
+          regraGeral = "> 800 kg H1 30% · H3 40% · H4 30% · H2 rest · H5 AVIH";
+          seq.push({ hold: "H1", ruleLabel: "30% Bags", pcs: Math.round(bags * 0.3), weight: Math.round(weight * 0.3) });
+          seq.push({ hold: "H3", ruleLabel: "40% Bags", pcs: Math.round(bags * 0.4), weight: Math.round(weight * 0.4) });
+          seq.push({ hold: "H4", ruleLabel: "30% Bags", pcs: bags - Math.round(bags * 0.3) - Math.round(bags * 0.4), weight: weight - Math.round(weight * 0.3) - Math.round(weight * 0.4) });
+          if (avih > 0 || wch > 0) seq.push({ hold: "H5", ruleLabel: "AVIH/WCH", pcs: 0, weight: avih + wch, isSpecialOnly: true });
+        }
+      }
+    } else if (company === "EZY") {
+      if (aircraft === "A319") {
+        regraGeral = "H1 rest · H4 ~100 pcs";
+        const h4Bags = Math.min(bags, 100);
+        const h4Weight = Math.round(h4Bags * (weight / bags || 0));
+        seq.push({ hold: "H4", ruleLabel: "~100 pcs", pcs: h4Bags, weight: h4Weight + wch });
+        seq.push({ hold: "H1", ruleLabel: "Rest", pcs: bags - h4Bags, weight: weight - h4Weight + avih });
+      } else if (aircraft === "A320") {
+        regraGeral = "H1 85 pcs · H3 60 pcs · H4 rest";
+        const h1Bags = Math.min(bags, 85); const h1Weight = Math.round(h1Bags * (weight / bags || 0));
+        const h3Bags = Math.min(bags - h1Bags, 60); const h3Weight = Math.round(h3Bags * (weight / bags || 0));
+        seq.push({ hold: "H1", ruleLabel: "85 pcs", pcs: h1Bags, weight: h1Weight + avih });
+        seq.push({ hold: "H3", ruleLabel: "60 pcs", pcs: h3Bags, weight: h3Weight });
+        seq.push({ hold: "H4", ruleLabel: "Rest", pcs: bags - h1Bags - h3Bags, weight: weight - h1Weight - h3Weight + wch });
+      } else if (aircraft === "A321") {
+        regraGeral = "H1 NIL · H2 rest · H3 100 pcs · H4 50 pcs";
+        const h3Bags = Math.min(bags, 100); const h3Weight = Math.round(h3Bags * (weight / bags || 0));
+        const h4Bags = Math.min(bags - h3Bags, 50); const h4Weight = Math.round(h4Bags * (weight / bags || 0));
+        seq.push({ hold: "H3", ruleLabel: "100 pcs", pcs: h3Bags, weight: h3Weight });
+        seq.push({ hold: "H4", ruleLabel: "50 pcs", pcs: h4Bags, weight: h4Weight + avih + wch });
+        seq.push({ hold: "H2", ruleLabel: "Rest", pcs: Math.max(0, bags - h3Bags - h4Bags), weight: Math.max(0, weight - h3Weight - h4Weight) });
+      }
+    } else if (company === "EWG") {
+      if (aircraft === "A319") {
+        regraGeral = "H4 1350 kg · H5 400 kg · H1 rest";
+        const h4Weight = Math.min(weight, 1350);
+        const h5Weight = Math.min(weight - h4Weight, 400);
+        seq.push({ hold: "H4", ruleLabel: "Max 1350 kg", pcs: 0, weight: h4Weight });
+        seq.push({ hold: "H5", ruleLabel: "Max 400 kg", pcs: 0, weight: h5Weight + avih + wch });
+        seq.push({ hold: "H1", ruleLabel: "Rest", pcs: bags, weight: weight - h4Weight - h5Weight });
+      } else if (aircraft === "A320") {
+        regraGeral = "H1 1500 kg · H3 1000 kg · H4 1000 kg";
+        const h1Weight = Math.min(weight, 1500);
+        const h3Weight = Math.min(weight - h1Weight, 1000);
+        seq.push({ hold: "H1", ruleLabel: "Max 1500 kg", pcs: 0, weight: h1Weight + avih });
+        seq.push({ hold: "H3", ruleLabel: "Max 1000 kg", pcs: 0, weight: h3Weight });
+        seq.push({ hold: "H4", ruleLabel: "Rest", pcs: bags, weight: weight - h1Weight - h3Weight + wch });
+      } else if (aircraft === "A321") {
+        regraGeral = "H3 500 kg · H2 500 kg · H1 500 kg (CLC)";
+        seq.push({ hold: "H3", ruleLabel: "500 kg", pcs: 0, weight: 500 });
+        seq.push({ hold: "H2", ruleLabel: "500 kg", pcs: 0, weight: 500 });
+        seq.push({ hold: "H1", ruleLabel: "CLC", pcs: bags, weight: Math.max(0, weight - 1000) + avih + wch });
+      }
     }
 
-    if (company === "EZY") {
-      if (aircraft === "A319") return <EasyJetA319 {...aircraftProps} />;
-      if (aircraft === "A320") return <EasyJetA320 {...aircraftProps} />;
-      if (aircraft === "A321") return <EasyJetA321 {...aircraftProps} />;
-    }
-
-    if (company === "EWG") {
-      if (aircraft === "A319") return <EurowingsA319 {...aircraftProps} />;
-      if (aircraft === "A320") return <EurowingsA320 {...aircraftProps} />;
-      if (aircraft === "A321") return <EurowingsA321 {...aircraftProps} />;
-    }
-
-    return null;
+    return { sequence: seq, regraGeral };
   };
 
+  const dist = getDistribution();
+  const pesoMedio = totalBags ? (Number(pesoTotal) / Number(totalBags)).toFixed(1) : "0";
+  const pesoTotalGeral = (Number(pesoTotal) || 0) + specialLoads.reduce((a, b) => a + b.weight, 0);
+  const pesoEspeciais = specialLoads.reduce((a, b) => a + b.weight, 0);
+  const pesoBagagemLiquido = Math.max(0, (Number(pesoTotal) || 0) - pesoEspeciais);
+  const pesoMedioReal = Number(totalBags) > 0 ? (pesoBagagemLiquido / Number(totalBags)).toFixed(2) : "0";
+
+  const handleAddSpecialLoad = () => {
+    if (!tempWeight || !aircraft) return alert("Selecione avião e peso");
+    setSpecialLoads([...specialLoads, { id: crypto.randomUUID(), type: tempType, weight: Number(tempWeight) }]);
+    setTempWeight("");
+  };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>✈️ Load Control - The Dispatcher Helper</h2>
-
-      {/* Companhia */}
-      <select
-        value={company}
-        onChange={(e) => handleCompanyChange(e.target.value)}
-      >
-        <option value="">Selecione a companhia</option>
-
-        {Object.entries(companies).map(([code, c]) => (
-          <option key={code} value={code}>
-            {code} - {c.name}
-          </option>
-        ))}
-      </select>
-
-      <br /><br />
-
-      {/* Avião */}
-      <select
-        value={aircraft}
-        disabled={!company}
-        onChange={(e) => setAircraft(e.target.value)}
-      >
-        <option value="">Selecione o avião</option>
-
-        {company &&
-          companies[company].aircrafts.map((a: string) => (
-            <option key={a} value={a}>
-              {a}
-            </option>
-          ))}
-      </select>
-      <hr />
-
-      <h3>Peso médio:</h3>
-      <div id="peso-medio">
-        <p>Peso total: </p>
-        <input
-          type="number"
-          placeholder="Peso total"
-          value={pesoTotal}
-          onChange={(e) => setPesoTotal(Number(e.target.value))}
-        />
-        <p>Total de bags: </p>
-        <input
-          type="number"
-          placeholder="Total de bags"
-          value={totalBags}
-          onChange={(e) => setTotalBags(Number(e.target.value))}
-        />
-
-        {pesoMedio !== 0 &&
-          <p>Peso médio: {pesoMedio}</p>
-        }
-      </div>
-
-      <div className="bg-gray-50 p-4 rounded-xl shadow-sm mb-6">
-        <h3 className="font-semibold text-gray-700 mb-3">📦 Cargas especiais</h3>
-
-        <div className="grid grid-cols-3 gap-3 mb-3">
-          <p>Categoria: </p>
-          <select
-            value={tempType}
-            onChange={(e) => setTempType(e.target.value as any)}
-            className="p-2 border rounded-lg"
-          >
-            <option value="AVIH">AVIH</option>
-            <option value="WCMP">Cadeira manual (sem bateria)</option>
-            <option value="WCBD">Cadeira com bateria seca (dry cell)</option>
-            <option value="WCBW">Cadeira com bateria molhada (wet cell)</option>
-            <option value="WCMP">Cadeira com bateria de lítio</option>
+    <div className="max-w-4xl mx-auto p-6 font-sans text-slate-800">
+      <header className="mb-8 border-b pb-4">
+        <h1 className="text-3xl font-black text-slate-900">✈️ LOAD CONTROL HELPER</h1>
+        <p className="text-slate-500 uppercase text-xs font-bold tracking-widest">Ground Operations - Quick Reference</p>
+      </header>
+      
+      <div className="grid md:grid-cols-2 gap-8 mb-8">
+        <div className="space-y-4 bg-slate-50 p-6 rounded-2xl border border-slate-200">
+          <h3 className="font-bold text-slate-700 uppercase text-sm">Voo & Aeronave</h3>
+          <select className="w-full p-3 rounded-lg border shadow-sm" value={company} onChange={(e) => { setCompany(e.target.value as any); setAircraft(""); }}>
+            <option value="">Companhia</option>
+            {Object.entries(companies).map(([code, c]) => <option key={code} value={code}>{code} - {c.name}</option>)}
           </select>
-
-          <p>Peso(kgs): </p>
-          <input
-            type="number"
-            placeholder="Peso (kg)"
-            value={tempWeight}
-            onChange={(e) => setTempWeight(Number(e.target.value))}
-            className="p-2 border rounded-lg"
-          />
+          <select className="w-full p-3 rounded-lg border shadow-sm" value={aircraft} disabled={!company} onChange={(e) => setAircraft(e.target.value)}>
+            <option value="">Aeronave</option>
+            {company && companies[company].aircrafts.map(a => <option key={a} value={a}>{a}</option>)}
+          </select>
+          <div className="grid grid-cols-2 gap-4">
+            <input type="number" placeholder="Peso Total Bags" className="p-3 rounded-lg border" value={pesoTotal} onChange={(e) => setPesoTotal(e.target.value === "" ? "" : Number(e.target.value))} />
+            <input type="number" placeholder="Total Bags (pcs)" className="p-3 rounded-lg border" value={totalBags} onChange={(e) => setTotalBags(e.target.value === "" ? "" : Number(e.target.value))} />
+          </div>
+          {totalBags !== "" && <p className="text-sm font-bold text-blue-600">Peso Médio: {pesoMedio} kg</p>}
         </div>
 
-        <button
-          onClick={handleAddSpecialLoad}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition"
-        >
-          ➕ Confirmar
-        </button>
+        <div className="space-y-4 bg-slate-50 p-6 rounded-2xl border border-slate-200">
+          <h3 className="font-bold text-slate-700 uppercase text-sm">📦 Cargas Especiais</h3>
+          <div className="flex gap-2">
+            <select className="flex-1 p-2 rounded-lg border" value={tempType} onChange={(e) => setTempType(e.target.value as any)}>
+              <option value="AVIH">AVIH</option>
+              <option value="WCMP">Cadeira manual (sem bateria)</option>
+              <option value="WCBD">Cadeira com bateria seca (dry cell)</option>
+              <option value="WCBW">Cadeira com bateria molhada (wet cell)</option>
+              <option value="WCLB">Cadeira com bateria de lítio</option>
+            </select>
+            <input type="number" placeholder="kg" className="w-20 p-2 rounded border" value={tempWeight} onChange={(e) => setTempWeight(e.target.value === "" ? "" : Number(e.target.value))} />
+            <button onClick={handleAddSpecialLoad} className="bg-slate-900 text-white px-3 rounded font-bold">ADD</button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {specialLoads.map(l => (
+              <span key={l.id} className="bg-white border text-xs px-2 py-1 rounded flex items-center gap-2">
+                {l.type}: {l.weight}kg <button onClick={() => setSpecialLoads(specialLoads.filter(i => i.id !== l.id))} className="text-red-500 font-bold">X</button>
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
 
-      <div className="space-y-3 mt-4">
-        {specialLoads.map((item) => (
-          <div
-            key={item.id}
-            className="bg-gray-800 text-white rounded-xl p-3 shadow-md flex flex-col gap-2"
-          >
+      {dist && (
+        <div className="bg-slate-900 border border-slate-700 rounded-lg overflow-hidden shadow-2xl mt-4">
+          <div className="w-full bg-slate-800 border border-blue-500/30 rounded-2xl p-4 shadow-lg">
             <div className="flex justify-between items-center">
-              <span className="font-semibold text-blue-400">
-                {item.type}
-              </span>
-            </div>
-
-            {/* Linha 2 */}
-            <div className="flex justify-between text-sm">
-              <span className="bg-gray-700 px-2 py-1 rounded-md">
-                ⚖️ {item.weight} kg
-              </span>
+              <div>
+                <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Peso Médio Real</p>
+                <p className="text-2xl font-black text-white">{pesoMedioReal} <small className="text-xs font-normal text-slate-500">kg</small></p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-black text-slate-500 uppercase">Bagagem Líquida</p>
+                <p className="text-sm font-bold text-slate-300">{pesoBagagemLiquido} kg</p>
+              </div>
             </div>
           </div>
-        ))}
-      </div>
-      <div style={{ marginTop: 10, padding: 10, borderRadius: 8 }}>
-        <p><strong>Resumo do Cálculo:</strong></p>
-        <p>Total Cargas Especiais: {pesoTotalEspecial} kg</p>
-        <p>Peso para Distribuir (Malas): {pesoRestanteParaMalas} kg</p>
-        <p><strong>Peso Médio Final: {pesoMedio} kg</strong></p>
-      </div>
-      <div>{renderAircraft()}</div>
-
-
-      <div className="min-h-screen flex flex-col">
-        <main className="flex-grow p-6">
-          <div className="mt-10 max-w-4xl mx-auto">
-            <OperationalTips />
+          <div className="bg-slate-800 p-3 border-b border-slate-700 flex justify-between items-center">
+            <h3 className="text-blue-400 font-black tracking-widest text-lg">
+              {company}{aircraft}
+            </h3>
+            <span className="text-[10px] bg-slate-700 px-2 py-1 rounded text-slate-300 font-mono">
+              <p>Regra: {dist.regraGeral}</p>
+            </span>
           </div>
-        </main>
 
-        <Footer />
-      </div>
+          <div className="w-full overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-800/50 text-[10px] uppercase tracking-wider text-slate-500 border-b border-slate-700">
+                  <th className="p-3 text-center w-12">Ordem</th>
+                  <th className="p-3 w-20">Porão</th>
+                  <th className="p-3">Regra Aplicada</th>
+                  <th className="p-3 text-right w-24">Qtd (Pcs)</th>
+                  <th className="p-3 text-right w-32">Peso (Kg)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800">
+                {dist.sequence.map((step, index) => (
+                  <tr
+                    key={index}
+                    className={`transition-colors ${step.isSpecialOnly ? 'bg-orange-500/5' : 'hover:bg-blue-500/5'
+                      }`}
+                  >
+                    {/* 1. ORDEM */}
+                    <td className="p-3 text-center">
+                      <span className="text-slate-500 font-bold text-sm">{index + 1}º</span>
+                    </td>
+
+                    {/* 2. PORÃO (HOLD) */}
+                    <td className="p-3">
+                      <span className={`px-2 py-0.5 rounded font-black text-xs ${step.hold.includes('H1') || step.hold.includes('H2')
+                        ? 'bg-blue-900/40 text-blue-400 border border-blue-800'
+                        : 'bg-orange-900/40 text-orange-400 border border-orange-800'
+                        }`}>
+                        {step.hold}
+                      </span>
+                    </td>
+
+                    <td className="p-3">
+                      <span className="text-slate-300 text-sm font-medium">
+                        {step.ruleLabel}
+                      </span>
+                    </td>
+
+                    <td className="p-3 text-right font-mono text-slate-400 font-bold">
+                      {step.pcs > 0 ? step.pcs : "—"}
+                    </td>
+
+                    <td className="p-3 text-right">
+                      <span className="text-white font-mono font-black text-lg">
+                        {step.weight}
+                        <small className="text-slate-500 text-[10px] ml-1 font-normal uppercase">kg</small>
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="bg-white rounded-3xl p-6 text-slate-900 shadow-2xl space-y-6">
+            <div className="flex items-center justify-between border-b pb-4">
+              <h3 className="font-black text-xl flex items-center gap-2">
+                <span className="text-green-500">✅</span> CONFERÊNCIA
+              </h3>
+              <span className="text-[10px] font-bold bg-slate-100 px-2 py-1 rounded text-slate-400">FINAL CHECK</span>
+            </div>
+
+            <div>
+              <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Peças (Bags):</p>
+              <p className="text-lg font-mono font-bold">
+                {dist.sequence.filter(s => s.pcs > 0).map(s => s.pcs).join(" + ")} = <span className="text-blue-600">{totalBags} pcs</span> ✔️
+              </p>
+            </div>
+
+            <div>
+              <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Peso Bruto (Total):</p>
+              <p className="text-lg font-mono font-bold leading-tight">
+                {/* Soma das bagagens + soma de cada especial */}
+                {dist.sequence.filter(s => !s.isSpecialOnly).map(s => s.weight).join(" + ")}
+                {specialLoads.length > 0 && " + " + specialLoads.map(s => s.weight).join(" + ")}
+                = <span className="text-green-600">{pesoTotalGeral} kg</span> ✔️
+              </p>
+            </div>
+
+            <hr className="border-dashed" />
+
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <p className="text-[9px] font-black text-slate-400 uppercase">Bagagem/Cargo</p>
+                <p className="font-bold">{totalBags} pcs / {pesoTotal} kg</p>
+              </div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <p className="text-[9px] font-black text-slate-400 uppercase">Especiais (AVIH/WCH)</p>
+                <p className="font-bold text-orange-600">{specialLoads.length} itens / {pesoEspeciais} kg</p>
+              </div>
+            </div>
+            <div className="space-y-1">
+              {dist.sequence.map((step, i) => (
+                <div key={i} className="flex justify-between text-xs font-mono border-b border-slate-50 py-1">
+                  <span className="text-slate-500">{step.hold}:</span>
+                  <span className="font-bold">{step.pcs > 0 ? `${step.pcs} / ` : ""}{step.weight} kg</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <main className="mt-12 opacity-80"><OperationalTips /></main>
+      <Footer />
     </div>
   );
 }
