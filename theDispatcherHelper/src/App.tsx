@@ -169,6 +169,8 @@ export default function App() {
   const pesoEspeciais = specialLoads.reduce((a, b) => a + b.weight, 0);
   const pesoBagagemLiquido = Math.max(0, pesoTotalInput - pesoEspeciais);
 
+  const specialStepWeights = dist?.sequence.filter(step => step.isSpecialOnly).map(step => step.weight) ?? [];
+
   const totalBagsNum = Number(totalBags) || 0;
   const pesoMedioReal = totalBagsNum > 0 ? (pesoBagagemLiquido / totalBagsNum).toFixed(2) : "0";
 
@@ -240,7 +242,7 @@ export default function App() {
                   <p className="text-2xl font-black text-white">{pesoMedioReal} <small className="text-xs font-normal text-slate-500">kg</small></p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-black text-slate-500 uppercase">Total Peso Bagagem:</p>
+                  <p className="text-[10px] font-black text-slate-500 uppercase">Peso total bagagem:</p>
                   <p className="text-sm font-bold text-slate-300">{pesoBagagemLiquido} kg</p>
                 </div>
               </div>
@@ -320,7 +322,7 @@ export default function App() {
               <div>
                 <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Peso Bruto Total:</p>
                 <p className="text-lg font-mono font-bold leading-tight text-slate-700">
-                  {pesoBagagemLiquido} + {pesoEspeciais} = <span className="text-green-600">{pesoTotalInput} kg</span> ✔️
+                  {pesoBagagemLiquido} + {specialStepWeights.length > 0 ? specialStepWeights.join(" + ") : 0} = <span className="text-green-600">{pesoTotalInput} kg</span> ✔️
                 </p>
               </div>
 
