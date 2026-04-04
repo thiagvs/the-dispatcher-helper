@@ -1,7 +1,6 @@
 import { useState } from "react";
 import OperationalTips from "./components/operationalTips";
 import Footer from "./components/customFooter";
-import SidebarMenu from "./components/sideBar";
 
 const companies = {
   EZY: {
