@@ -9,7 +9,7 @@ const companies = {
         name: "Transavia",
         aircrafts: ["B737-800", "A320", "A321"],
     },
-    EWG: {
+    EW: {
         name: "Eurowings",
         aircrafts: ["A319", "A320", "A321"],
     },
@@ -43,6 +43,7 @@ export default function Loads() {
     const [specialLoads, setSpecialLoads] = useState<SpecialLoad[]>([]);
     const [tempType, setTempType] = useState<"AVIH" | "WCMP" | "WCBD" | "WCBW" | "WCLB">("AVIH");
     const [tempWeight, setTempWeight] = useState<number | "">("");
+    const [holdSelected, setHoldSelected] = useState<"H1" | "H3" | "H4">("H1");
 
     const getDistribution = (): Distribution | null => {
         if (!company || !aircraft) return null;
@@ -68,27 +69,34 @@ export default function Loads() {
         const otherWchWeight = otherWchItems.reduce((acc, curr) => acc + curr.weight, 0);
         const otherWchPcs = otherWchItems.length;
 
-        // O peso usado para calcular a divisão percentual dos porões (Peso Líquido)
+        const specialPcs = avihPcs + wchPcs;
+        const regularBags = Math.max(0, bags - specialPcs);
         const weight = Math.max(0, totalWeightInput - avihWeight - wchWeight);
+        const bagWeightPerPiece = regularBags > 0 ? weight / regularBags : 0;
+
+
+        const pesoTotalInput = Number(pesoTotal) || 0;
+        const pesoEspeciais = specialLoads.reduce((a, b) => a + b.weight, 0);
+        const pesoBagagemLiquido = Math.max(0, pesoTotalInput - pesoEspeciais);
 
         let seq: LoadingStep[] = [];
         let regraGeral = "";
 
         if (company === "TVF") {
             if (aircraft === "B737-800") {
+                debugger;
                 regraGeral = "H1 heavy · H2 50% · H3 50% (+ WCMP)";
-
                 if (avihWeight > 0) {
                     seq.push({ hold: "H1", ruleLabel: "Heavy/AVIH", pcs: avihPcs, weight: avihWeight, isSpecialOnly: true });
                 }
 
-                seq.push({ hold: "H2", ruleLabel: "50% Bags", pcs: Math.ceil(bags / 2), weight: Math.ceil(weight / 2) });
+                seq.push({ hold: "H2", ruleLabel: "50% Bags", pcs: Math.ceil(regularBags / 2), weight: Math.ceil(weight / 2) });
 
                 // 🔥 H3 agora recebe 50% das malas + a cadeira WCMP
                 seq.push({
                     hold: "H3",
                     ruleLabel: wcmpPcs > 0 ? "50% Bags + WCMP" : "50% Bags",
-                    pcs: Math.floor(bags / 2) + wcmpPcs,
+                    pcs: Math.floor(regularBags / 2) + wcmpPcs,
                     weight: Math.floor(weight / 2) + wcmpWeight
                 });
 
@@ -98,64 +106,153 @@ export default function Loads() {
                 }
             } else if (aircraft === "A320") {
                 regraGeral = "H1 50% · H3 50% · H4/H5 AVIH";
-                seq.push({ hold: "H1", ruleLabel: "50% Bags", pcs: Math.ceil(bags / 2), weight: Math.ceil(weight / 2) });
-                seq.push({ hold: "H3", ruleLabel: "50% Bags", pcs: Math.floor(bags / 2), weight: Math.floor(weight / 2) });
-                if (avihWeight > 0 || wchWeight > 0) seq.push({ hold: "H4/H5", ruleLabel: "Especiais", pcs: avihPcs + wchPcs, weight: avihWeight + wchWeight, isSpecialOnly: true });
+                seq.push({ hold: "H1", ruleLabel: "50% Bags", pcs: Math.ceil(regularBags / 2), weight: Math.ceil(weight / 2) });
+                seq.push({ hold: "H3", ruleLabel: "50% Bags", pcs: Math.floor(regularBags / 2), weight: Math.floor(weight / 2) });
+                if (avihWeight > 0 || wchWeight > 0) seq.push({ hold: "H5", ruleLabel: "AVIH", pcs: avihPcs + wchPcs, weight: avihWeight + wchWeight, isSpecialOnly: true });
             } else if (aircraft === "A321") {
                 if (weight <= 800) {
                     regraGeral = "≤ 800 kg H3 prioritário";
-                    seq.push({ hold: "H3", ruleLabel: "Prioritário", pcs: bags, weight: weight });
+                    seq.push({ hold: "H3", ruleLabel: "Prioritário", pcs: regularBags, weight: weight });
                     if (avihWeight > 0 || wchWeight > 0) seq.push({ hold: "H5", ruleLabel: "AVIH/WCH", pcs: avihPcs + wchPcs, weight: avihWeight + wchWeight, isSpecialOnly: true });
                 } else {
                     regraGeral = "> 800 kg H1 30% · H3 40% · H4 30% · H2 rest · H5 AVIH";
-                    seq.push({ hold: "H1", ruleLabel: "30% Bags", pcs: Math.round(bags * 0.3), weight: Math.round(weight * 0.3) });
-                    seq.push({ hold: "H3", ruleLabel: "40% Bags", pcs: Math.round(bags * 0.4), weight: Math.round(weight * 0.4) });
-                    seq.push({ hold: "H4", ruleLabel: "30% Bags", pcs: bags - Math.round(bags * 0.3) - Math.round(bags * 0.4), weight: weight - Math.round(weight * 0.3) - Math.round(weight * 0.4) });
+                    seq.push({ hold: "H2", ruleLabel: "30% Bags", pcs: Math.round(regularBags * 0.3), weight: Math.round(weight * 0.3) });
+                    seq.push({ hold: "H3", ruleLabel: "40% Bags", pcs: Math.round(regularBags * 0.4), weight: Math.round(weight * 0.4) });
+                    seq.push({ hold: "H4", ruleLabel: "30% Bags", pcs: regularBags - Math.round(regularBags * 0.3) - Math.round(regularBags * 0.4), weight: weight - Math.round(weight * 0.3) - Math.round(weight * 0.4) });
                     if (avihWeight > 0 || wchWeight > 0) seq.push({ hold: "H5", ruleLabel: "AVIH/WCH", pcs: avihPcs + wchPcs, weight: avihWeight + wchWeight, isSpecialOnly: true });
                 }
             }
         } else if (company === "EZY") {
             if (aircraft === "A319") {
                 regraGeral = "H1 rest · H4 ~100 pcs";
-                const h4Bags = Math.min(bags, 100);
-                const h4Weight = Math.round(h4Bags * (weight / bags || 0));
+                const h4Bags = Math.min(regularBags, 100);
+                const h4Weight = Math.round(h4Bags * bagWeightPerPiece);
                 seq.push({ hold: "H4", ruleLabel: "~100 pcs", pcs: h4Bags + wchPcs, weight: h4Weight + wchWeight });
-                seq.push({ hold: "H1", ruleLabel: "Rest", pcs: (bags - h4Bags) + avihPcs, weight: (weight - h4Weight) + avihWeight });
+                seq.push({ hold: "H1", ruleLabel: "Rest", pcs: (regularBags - h4Bags) + avihPcs, weight: (weight - h4Weight) + avihWeight });
             } else if (aircraft === "A320") {
                 regraGeral = "H1 85 pcs · H3 60 pcs · H4 rest";
-                const h1Bags = Math.min(bags, 85); const h1Weight = Math.round(h1Bags * (weight / bags || 0));
-                const h3Bags = Math.min(bags - h1Bags, 60); const h3Weight = Math.round(h3Bags * (weight / bags || 0));
+                const h1Bags = Math.min(regularBags, 85); const h1Weight = Math.round(h1Bags * bagWeightPerPiece);
+                const h3Bags = Math.min(regularBags - h1Bags, 60); const h3Weight = Math.round(h3Bags * bagWeightPerPiece);
                 seq.push({ hold: "H1", ruleLabel: "85 pcs", pcs: h1Bags + avihPcs, weight: h1Weight + avihWeight });
                 seq.push({ hold: "H3", ruleLabel: "60 pcs", pcs: h3Bags, weight: h3Weight });
-                seq.push({ hold: "H4", ruleLabel: "Rest", pcs: (bags - h1Bags - h3Bags) + wchPcs, weight: (weight - h1Weight - h3Weight) + wchWeight });
+                seq.push({ hold: "H4", ruleLabel: "Rest", pcs: (regularBags - h1Bags - h3Bags) + wchPcs, weight: (weight - h1Weight - h3Weight) + wchWeight });
             } else if (aircraft === "A321") {
                 regraGeral = "H1 NIL · H2 rest · H3 100 pcs · H4 50 pcs";
-                const h3Bags = Math.min(bags, 100); const h3Weight = Math.round(h3Bags * (weight / bags || 0));
-                const h4Bags = Math.min(bags - h3Bags, 50); const h4Weight = Math.round(h4Bags * (weight / bags || 0));
+                const h3Bags = Math.min(regularBags, 100); const h3Weight = Math.round(h3Bags * bagWeightPerPiece);
+                const h4Bags = Math.min(regularBags - h3Bags, 50); const h4Weight = Math.round(h4Bags * bagWeightPerPiece);
                 seq.push({ hold: "H3", ruleLabel: "100 pcs", pcs: h3Bags, weight: h3Weight });
                 seq.push({ hold: "H4", ruleLabel: "50 pcs", pcs: h4Bags + avihPcs + wchPcs, weight: h4Weight + avihWeight + wchWeight });
-                seq.push({ hold: "H2", ruleLabel: "Rest", pcs: Math.max(0, bags - h3Bags - h4Bags), weight: Math.max(0, weight - h3Weight - h4Weight) });
+                seq.push({ hold: "H2", ruleLabel: "Rest", pcs: Math.max(0, regularBags - h3Bags - h4Bags), weight: Math.max(0, weight - h3Weight - h4Weight) });
             }
-        } else if (company === "EWG") {
+        } else if (company === "EW") {
             if (aircraft === "A319") {
-                regraGeral = "H4 1350 kg · H5 400 kg · H1 rest";
-                const h4Weight = Math.min(weight, 1350);
-                const h5Weight = Math.min(weight - h4Weight, 400);
-                seq.push({ hold: "H4", ruleLabel: "Max 1350 kg", pcs: 0, weight: h4Weight });
-                seq.push({ hold: "H5", ruleLabel: "Max 400 kg", pcs: avihPcs + wchPcs, weight: h5Weight + avihWeight + wchWeight });
-                seq.push({ hold: "H1", ruleLabel: "Rest", pcs: bags, weight: weight - h4Weight - h5Weight });
+                regraGeral = "H4 Max 85 pcs / 1350 kg · H5 450 kg · H1 rest";
+
+                // 1. Descobre o peso médio de cada mala
+                const pesoMedio = regularBags > 0 ? pesoBagagemLiquido / regularBags : 0;
+
+                // 2. Lógica H4 (Duplo limite: 85 peças OU 1350kg - o que atingir primeiro)
+                const maxPeçasPorPesoH4 = pesoMedio > 0 ? Math.floor(1350 / pesoMedio) : 0;
+
+                // O teto de malas do H4 será o menor valor entre o limite de peso e o limite físico de 85 malas
+                const limitePecasH4 = Math.min(maxPeçasPorPesoH4, 85);
+
+                // Preenche o H4 com as malas disponíveis, respeitando o limite calculado acima
+                const h4Bags = Math.min(regularBags, limitePecasH4);
+                const h4Weight = Math.round(h4Bags * pesoMedio);
+
+                // 3. Atualiza o que sobrou de malas após preencher o H4
+                const restanteBagsPosH4 = regularBags - h4Bags;
+
+                // 4. Lógica H5 (Preenche o que sobrou até o máximo de 450kg)
+                const maxPeçasH5 = pesoMedio > 0 ? Math.floor(450 / pesoMedio) : 0;
+                const h5Bags = Math.min(restanteBagsPosH4, maxPeçasH5);
+                const h5WeightBags = Math.round(h5Bags * pesoMedio);
+
+                // Peso total do H5 inclui as malas + pesos especiais
+                const avihW = typeof avihWeight !== 'undefined' ? avihWeight : 0;
+                const wchW = typeof wchWeight !== 'undefined' ? wchWeight : 0;
+                const h5TotalWeight = h5WeightBags + avihW + wchW;
+
+                // 5. Lógica H1 (O Excedente de tudo)
+                const h1Bags = restanteBagsPosH4 - h5Bags;
+
+                // Subtração exata para evitar perdas de quilos nos arredondamentos
+                const h1Weight = regularBags > 0 ? Math.round(pesoBagagemLiquido - h4Weight - h5WeightBags) : 0;
+
+                // 6. Insere no Array
+                seq.push({ hold: "H4", ruleLabel: "Max 85pcs/1350kg", pcs: h4Bags, weight: h4Weight });
+                seq.push({ hold: "H5", ruleLabel: "Max 450 kg", pcs: h5Bags, weight: h5TotalWeight });
+                seq.push({ hold: "H1", ruleLabel: "Rest", pcs: h1Bags, weight: h1Weight });
             } else if (aircraft === "A320") {
-                regraGeral = "H1 1500 kg · H3 1000 kg · H4 1000 kg";
-                const h1Weight = Math.min(weight, 1500);
-                const h3Weight = Math.min(weight - h1Weight, 1000);
-                seq.push({ hold: "H1", ruleLabel: "Max 1500 kg", pcs: avihPcs, weight: h1Weight + avihWeight });
-                seq.push({ hold: "H3", ruleLabel: "Max 1000 kg", pcs: 0, weight: h3Weight });
-                seq.push({ hold: "H4", ruleLabel: "Rest", pcs: bags + wchPcs, weight: weight - h1Weight - h3Weight + wchWeight });
+                regraGeral = "H1 85pcs/1500kg · H3 1000kg · H4 1000kg · H5 rest";
+
+                // 1. Definição de pesos e peças auxiliares
+                const pesoMedio = regularBags > 0 ? pesoBagagemLiquido / regularBags : 0;
+                let malasRestantes = regularBags;
+
+                const avihW = typeof avihWeight !== 'undefined' ? avihWeight : 0;
+                const wchW = typeof wchWeight !== 'undefined' ? wchWeight : 0;
+                const avihP = typeof avihPcs !== 'undefined' ? avihPcs : 0;
+                const wchP = typeof wchPcs !== 'undefined' ? wchPcs : 0;
+
+                // Supõe-se que WCMP_PCS e WCMP_WEIGHT venham do seu estado/props
+                // Se WCMP estiver dentro de wchWeight, você deve separar ou tratar aqui
+                const wcmpWeightValue = wchItems.filter(l => l.type === "WCMP").reduce((acc, curr) => acc + curr.weight, 0);
+                const wcmpPcsValue = wchItems.filter(l => l.type === "WCMP").length;
+                const wcmpWeight = typeof wcmpWeightValue !== 'undefined' ? wcmpWeightValue : 0;
+                const wcmpPcs = typeof wcmpPcsValue !== 'undefined' ? wcmpPcsValue : 0;
+
+                // 2. Lógica H1
+                const maxPcsPesoH1 = pesoMedio > 0 ? Math.floor(1500 / pesoMedio) : 0;
+                const h1Bags = Math.min(malasRestantes, Math.min(maxPcsPesoH1, 85));
+                const h1WeightBase = Math.round(h1Bags * pesoMedio);
+                malasRestantes -= h1Bags;
+
+                // 3. Lógica H3
+                const maxPcsH3 = pesoMedio > 0 ? Math.floor(1000 / pesoMedio) : 0;
+                const h3Bags = Math.min(malasRestantes, maxPcsH3);
+                const h3WeightBase = Math.round(h3Bags * pesoMedio);
+                malasRestantes -= h3Bags;
+
+                // 4. Lógica H4
+                const maxPcsH4 = pesoMedio > 0 ? Math.floor(1000 / pesoMedio) : 0;
+                const h4Bags = Math.min(malasRestantes, maxPcsH4);
+                const h4WeightBase = Math.round(h4Bags * pesoMedio);
+                malasRestantes -= h4Bags;
+
+                // 5. Lógica H5 (Restante das malas)
+                const h5Bags = malasRestantes;
+                const h5WeightBase = Math.round(pesoBagagemLiquido - h1WeightBase - h3WeightBase - h4WeightBase);
+
+                // 6. Distribuição de Especiais (WCMP no selecionado, resto no H5)
+                // Criamos um objeto para facilitar a soma antes de dar o push no array
+                const distribution: any = {
+                    H1: { pcs: h1Bags, weight: h1WeightBase },
+                    H3: { pcs: h3Bags, weight: h3WeightBase },
+                    H4: { pcs: h4Bags, weight: h4WeightBase },
+                    H5: { pcs: h5Bags , weight: h5WeightBase }
+                };
+
+                debugger;
+                // Adiciona a WCMP especificamente no porão escolhido pelo usuário
+                if (distribution[holdSelected]) {
+                    distribution[holdSelected].weight += wcmpWeight;
+                } else {
+                    // Fallback para H5 caso holdSelected seja inválido
+                    distribution["H5"].weight += wcmpWeight;
+                }
+
+                // 7. Montagem final da sequência
+                seq.push({ hold: "H1", ruleLabel: "Max 85pcs/1500kg", pcs: distribution.H1.pcs, weight: distribution.H1.weight });
+                seq.push({ hold: "H3", ruleLabel: "Max 1000 kg", pcs: distribution.H3.pcs, weight: distribution.H3.weight });
+                seq.push({ hold: "H4", ruleLabel: "Max 1000 kg", pcs: distribution.H4.pcs, weight: distribution.H4.weight });
+                seq.push({ hold: "H5", ruleLabel: "Restante", pcs: distribution.H5.pcs, weight: distribution.H5.weight });
             } else if (aircraft === "A321") {
                 regraGeral = "H3 500 kg · H2 500 kg · H1 500 kg (CLC)";
                 seq.push({ hold: "H3", ruleLabel: "500 kg", pcs: 0, weight: 500 });
                 seq.push({ hold: "H2", ruleLabel: "500 kg", pcs: 0, weight: 500 });
-                seq.push({ hold: "H1", ruleLabel: "CLC", pcs: bags + avihPcs + wchPcs, weight: Math.max(0, weight - 1000) + avihWeight + wchWeight });
+                seq.push({ hold: "H1", ruleLabel: "CLC", pcs: bags, weight: Math.max(0, weight - 1000) + avihWeight + wchWeight });
             }
         }
 
@@ -164,17 +261,24 @@ export default function Loads() {
 
     const dist = getDistribution();
     const pesoTotalInput = Number(pesoTotal) || 0; // O input já é o GWT que inclui bags e especiais
-
     const pesoEspeciais = specialLoads.reduce((a, b) => a + b.weight, 0);
     const pesoBagagemLiquido = Math.max(0, pesoTotalInput - pesoEspeciais);
 
+    const avihItems = specialLoads.filter(l => l.type === "AVIH");
+    const avihPcs = avihItems.length;
+    const wchItems = specialLoads.filter(l => l.type !== "AVIH");
+    const wchPcs = wchItems.length;
+    const specialPcs = avihPcs + wchPcs;
+    const regularBags = Math.max(0, Number(totalBags) - specialPcs);
+
     const specialStepWeights = dist?.sequence.filter(step => step.isSpecialOnly).map(step => step.weight) ?? [];
 
+
     const totalBagsNum = Number(totalBags) || 0;
-    const pesoMedioReal = totalBagsNum > 0 ? (pesoBagagemLiquido / totalBagsNum).toFixed(2) : "0";
+    const pesoMedioReal = regularBags > 0 ? (pesoBagagemLiquido / regularBags).toFixed(2) : "0";
 
     // Total geral de itens (malas + cadeiras + animais)
-    const totalPcsGeral = totalBagsNum + specialLoads.length;
+    const totalPcsGeral = totalBagsNum;
 
     const handleAddSpecialLoad = () => {
         if (!tempWeight || !aircraft) return alert("Selecione avião e peso");
@@ -200,7 +304,7 @@ export default function Loads() {
                             <input type="number" placeholder="Peso Total (Bruto)" className="p-3 rounded-lg border" value={pesoTotal} onChange={(e) => setPesoTotal(e.target.value === "" ? "" : Number(e.target.value))} />
                             <input type="number" placeholder="Total Bags (pcs)" className="p-3 rounded-lg border" value={totalBags} onChange={(e) => setTotalBags(e.target.value === "" ? "" : Number(e.target.value))} />
                         </div>
-                        {totalBags !== "" && <p className="text-sm font-bold text-blue-600">Peso Médio Real: {pesoMedioReal} kg</p>}
+                        {totalBags !== "" && <p className="text-sm font-bold text-blue-600">Peso Médio: {pesoMedioReal} kg</p>}
                     </div>
 
                     <div className="space-y-4 bg-slate-50 p-6 rounded-2xl border border-slate-200">
@@ -215,6 +319,16 @@ export default function Loads() {
                             </select>
                             <input type="number" placeholder="kg" className="w-20 p-2 rounded border" value={tempWeight} onChange={(e) => setTempWeight(e.target.value === "" ? "" : Number(e.target.value))} />
                             <button onClick={handleAddSpecialLoad} className="bg-slate-900 text-white px-3 rounded font-bold">ADD</button>
+
+                            {tempType === "WCMP" && (
+                                <div>
+                                    <select className="flex-1 p-2 rounded-lg border" value={holdSelected} onChange={(e) => setHoldSelected(e.target.value as any)}>
+                                        <option value="H1">H1</option>
+                                        <option value="H3">H3</option>
+                                        <option value="H4">H4</option>
+                                    </select>
+                                </div>
+                            )}
                         </div>
                         <div className="flex flex-wrap gap-2">
                             {specialLoads.map(l => (
@@ -232,7 +346,7 @@ export default function Loads() {
                         <div className="w-full bg-slate-800 border-b border-slate-700 p-4">
                             <div className="flex justify-between items-center">
                                 <div>
-                                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Peso Médio Real</p>
+                                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Peso Médio</p>
                                     <p className="text-2xl font-black text-white">{pesoMedioReal} <small className="text-xs font-normal text-slate-500">kg</small></p>
                                 </div>
                                 <div className="text-right">
@@ -243,7 +357,7 @@ export default function Loads() {
                         </div>
                         <div className="bg-slate-800 p-3 border-b border-slate-700 flex justify-between items-center">
                             <h3 className="text-blue-400 font-black tracking-widest text-lg">
-                                {company}{aircraft}
+                                {company} - {aircraft}
                             </h3>
                             <span className="text-[10px] bg-slate-700 px-2 py-1 rounded text-slate-300 font-mono">
                                 <p>Regra: {dist.regraGeral}</p>
@@ -315,22 +429,25 @@ export default function Loads() {
                                 </p>
                             </div>
 
-                            <div>
-                                <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Peso Bruto Total:</p>
-                                <p className="text-lg font-mono font-bold leading-tight text-slate-700">
-                                    {pesoBagagemLiquido} + {specialStepWeights.length > 0 ? specialStepWeights.join(" + ") : 0} = <span className="text-green-600">{pesoTotalInput} kg</span> ✔️
-                                </p>
-                            </div>
+
+                            {specialStepWeights.length > 0 && (
+                                <div>
+                                    <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Peso Bruto Total:</p>
+                                    <p className="text-lg font-mono font-bold leading-tight text-slate-700">
+                                        {pesoBagagemLiquido} + {specialStepWeights.length > 0 ? specialStepWeights.join(" + ") : 0} = <span className="text-green-600">{pesoTotalInput} kg</span> ✔️
+                                    </p>
+                                </div>
+                            )}
+
 
                             <p>Informações completas:</p>
                             <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase">Bagagem/Cargo</p>
+                                    <p className="text-[9px] font-black text-slate-400 uppercase">Bagagem</p>
                                     <p className="font-bold">{totalBags} pcs / {pesoBagagemLiquido} kg</p>
                                 </div>
                                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                                     <p className="text-[9px] font-black text-slate-400 uppercase">Especiais (AVIH/WCH)</p>
-                                    <p className="font-bold text-orange-600">{specialLoads.length} itens / {pesoEspeciais} kg</p>
                                 </div>
                             </div>
 
