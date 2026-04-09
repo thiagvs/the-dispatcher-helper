@@ -186,22 +186,10 @@ export default function Loads() {
                 seq.push({ hold: "H1", ruleLabel: "Rest", pcs: h1Bags, weight: h1Weight });
             } else if (aircraft === "A320") {
                 regraGeral = "H1 85pcs/1500kg · H3 1000kg · H4 1000kg · H5 rest";
-
-                // 1. Definição de pesos e peças auxiliares
                 const pesoMedio = regularBags > 0 ? pesoBagagemLiquido / regularBags : 0;
                 let malasRestantes = regularBags;
-
-                const avihW = typeof avihWeight !== 'undefined' ? avihWeight : 0;
-                const wchW = typeof wchWeight !== 'undefined' ? wchWeight : 0;
-                const avihP = typeof avihPcs !== 'undefined' ? avihPcs : 0;
-                const wchP = typeof wchPcs !== 'undefined' ? wchPcs : 0;
-
-                // Supõe-se que WCMP_PCS e WCMP_WEIGHT venham do seu estado/props
-                // Se WCMP estiver dentro de wchWeight, você deve separar ou tratar aqui
                 const wcmpWeightValue = wchItems.filter(l => l.type === "WCMP").reduce((acc, curr) => acc + curr.weight, 0);
-                const wcmpPcsValue = wchItems.filter(l => l.type === "WCMP").length;
                 const wcmpWeight = typeof wcmpWeightValue !== 'undefined' ? wcmpWeightValue : 0;
-                const wcmpPcs = typeof wcmpPcsValue !== 'undefined' ? wcmpPcsValue : 0;
 
                 // 2. Lógica H1
                 const maxPcsPesoH1 = pesoMedio > 0 ? Math.floor(1500 / pesoMedio) : 0;
