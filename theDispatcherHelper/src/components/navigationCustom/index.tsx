@@ -15,14 +15,13 @@ const NavigatorCustom: React.FC = () => {
 
     return (
         <>
-            <div className="w-full z-50 bg-gray-900/80 backdrop-blur-sm border-t border-gray-700">
+           <div className="sticky bottom-0 left-0 w-full h-16 bg-[#1a222c] border-t border-gray-800 z-50">
                 <BottomNavigation
                     sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, width: '100%', background: '#2e2d2a' }}
                     showLabels
                     value={value}
                     onChange={(event, newValue) => {
-                        console.log("Navegando para:", routes[newValue]);
-                        console.log("Evento:", event);
+                        console.log("Event:", event);
                         setValue(newValue);
                         navigate(routes[newValue]);
                     }}
