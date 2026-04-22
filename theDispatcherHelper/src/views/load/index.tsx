@@ -74,37 +74,52 @@ export default function Loads() {
         if (company === "TVF") {
             if (aircraft === "B737-800") {
                 regraGeral = "H1 heavy · H2 50% · H3 50%";
-                let totalPcsToSplit = bags;
 
-                // Filtramos apenas os especiais que o usuário designou para H2 ou H3
+                // 1. SUBTRAIR / PREPARAR TOTAL
+                // Começamos com o peso líquido da bagagem e somamos os especiais designados para o split
+                let weightToDistribute = pesoBagagemLiquido;
                 const splitSpecials = specialLoads.filter(load => load.hold === "H2" || load.hold === "H3");
 
                 splitSpecials.forEach(load => {
-                    totalWeightToSplit += load.weight;
+                    weightToDistribute += load.weight;
                 });
 
-                // 2. Criar os steps de H2 e H3 com o balanceamento de 50%
+                // 2. DISTRIBUIR (50/50)
+                // Peças: Divisão simples das malas
+                const h2Pcs = Math.ceil(bags / 2);
+                const h3Pcs = bags - h2Pcs; // Garante que a soma das peças seja sempre exata
+
+                // Pesos: Divisão do peso total (Bags + Especiais de H2/H3)
+                const h2WeightTotal = Math.round(weightToDistribute / 2);
+                const h3WeightTotal = weightToDistribute - h2WeightTotal; // Garante que o peso total bata 100%
+
+                // 3. SOMAR TUDO (Montar a sequência)
                 seq.push({
                     hold: "H2",
                     ruleLabel: "50% Bags",
-                    pcs: Math.ceil(totalPcsToSplit / 2),
-                    weight: Math.ceil(totalWeightToSplit / 2)
+                    pcs: h2Pcs,
+                    weight: h2WeightTotal
                 });
 
                 seq.push({
                     hold: "H3",
                     ruleLabel: "50% Bags",
-                    pcs: Math.floor(totalPcsToSplit / 2),
-                    weight: Math.floor(totalWeightToSplit / 2)
+                    pcs: h3Pcs,
+                    weight: h3WeightTotal
                 });
 
+                // 4. TRATAR LABELS E PORÕES EXTRAS (H1)
                 specialLoads.forEach(load => {
-                    // Tenta encontrar se este porão já existe na lista (ex: H1 ou H3)
                     const existingStep = seq.find(s => s.hold === load.hold);
 
                     if (existingStep) {
-                        existingStep.ruleLabel += ` + ${load.type || "Special"}`;
+                        // Se o especial está no H2 ou H3, apenas adicionamos o nome ao label
+                        // O peso já foi incluído no cálculo do passo 2
+                        if (!existingStep.ruleLabel.includes(load.type)) {
+                            existingStep.ruleLabel += ` + ${load.type || "Special"}`;
+                        }
                     } else {
+                        // Se for para o H1 (ou outro), entra como linha independente
                         seq.push({
                             hold: load.hold,
                             ruleLabel: load.type || "Special Load",
@@ -179,9 +194,9 @@ export default function Loads() {
                         }
                     });
                 } else {
-                    regraGeral = "> 800 kg H1 30% · H3 40% · H4 30% · H2 rest · H5 AVIH";
+                    regraGeral = "> 800 kg H2 30% · H3 40% · H4 30% · H2 rest · H5 AVIH";
 
-                    const splitSpecials = specialLoads.filter(load => load.hold === "H1" || load.hold === "H3" || load.hold === "H4");
+                    const splitSpecials = specialLoads.filter(load => load.hold === "H2" || load.hold === "H3" || load.hold === "H4");
 
                     splitSpecials.forEach(load => {
                         totalWeightToSplit += load.weight;
@@ -198,7 +213,7 @@ export default function Loads() {
                     let weightH4 = totalWeightToSplit - (weightH1 + weightH3); // Garante que o peso bruto total bata
 
                     seq.push({
-                        hold: "H1",
+                        hold: "H2",
                         ruleLabel: "30% Bags",
                         pcs: pcsH1,
                         weight: weightH1
@@ -218,13 +233,13 @@ export default function Loads() {
                         weight: weightH4
                     });
 
-                    // 4. Processar labels dos especiais e adicionar porões extras (H2, H5)
+                    // 4. Processar labels dos especiais e adicionar porões extras (H1, H5)
                     specialLoads.forEach(load => {
                         const existingStep = seq.find(s => s.hold === load.hold);
 
                         if (existingStep) {
                             existingStep.ruleLabel += ` + ${load.type || "Special"}`;
-                            // O peso NÃO precisa ser somado aqui, pois já foi distribuído no passo 3
+  
                         } else {
                             seq.push({
                                 hold: load.hold,
@@ -286,7 +301,6 @@ export default function Loads() {
                 const h5WeightBags = Math.round(h5Bags * pesoMedio);
                 const h1Bags = restanteBagsPosH4 - h5Bags;
                 const h1WeightBags = Math.max(0, Math.round(pesoBagagemLiquido - h4WeightBags - h5WeightBags));
-
 
                 seq.push({
                     hold: "H4",
@@ -664,6 +678,5 @@ export default function Loads() {
                 <main className="mt-12 opacity-80"></main>
             </div>
         </>
-
     );
 }
