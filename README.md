@@ -1,73 +1,38 @@
-# React + TypeScript + Vite
+# ✈️ The Dispatcher Helper - 2026
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 
-Currently, two official plugins are available:
+O **The Dispatcher Helper** é uma ferramenta especializada desenvolvida para auxiliar despachantes operacionais de voo (DOVs) e equipes de solo no cálculo preciso de distribuição de carga e bagagem em aeronaves comerciais.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Funcionalidades Principais
 
-## React Compiler
+* **Cálculo Automatizado por Aeronave**: Algoritmos específicos para as frotas:
+    * **Boeing 737-800**: Balanceamento 50/50 entre H2 e H3 com suporte a H1 Heavy.
+    * **Airbus A319/A320/A321**: Regras customizadas de porões (H1 a H5) respeitando limites de peso e quantidade de peças.
+* **Gestão de Cargas Especiais**: Interface intuitiva para adicionar itens como **WCMP** (Cadeiras de rodas), **AVIH** (Animais no porão) e **WCLB**, permitindo a escolha dinâmica do porão de destino.
+* **Sistema de "Subtrair e Distribuir"**: Lógica avançada que desconta o peso de cargas especiais dos limites do porão antes de distribuir as bagagens comuns, garantindo que nenhum limite de segurança seja ultrapassado.
+* **Conferência em Tempo Real (Final Check)**: Validador automático que compara a soma das peças e pesos alocados com os dados brutos inseridos, exibindo um status visual de aprovação (✅).
+* **Interface Mobile-First**: Design otimizado para uso em tablets e smartphones, com menu de navegação fixo e footer inteligente.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Tecnologias Utilizadas
 
-## Expanding the ESLint configuration
+* **Frontend**: React.js com TypeScript para tipagem robusta.
+* **Estilização**: Tailwind CSS para um layout moderno e dark mode nativo.
+* **Navegação**: React Router para transição suave entre abas (Carregamento, Dicas, Contatos, Direitos).
+* **Componentes**: Material UI (MUI) para elementos de navegação complexos.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 📐 Lógica de Cálculo de Peso
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+O projeto utiliza uma hierarquia de cálculos para evitar erros de arredondamento:
+1.  **Peso Médio**: Calculado com base na bagagem líquida.
+2.  **Alocação por Prioridade**: Preenchimento sequencial de porões conforme a regra da companhia.
+3.  **Fiel da Balança**: O último porão da sequência absorve a diferença matemática, garantindo que o Peso Bruto Total bata 100% com o inserido.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 📱 Layout
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+O projeto conta com um layout adaptativo:
+* **Header**: Identificação do voo e aeronave.
+* **Main**: Área de scroll contendo as tabelas de distribuição e campos de input.
+* **Navigator**: Menu inferior fixo para acesso rápido às funcionalidades.
