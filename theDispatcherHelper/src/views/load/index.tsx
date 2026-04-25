@@ -13,6 +13,10 @@ const companies = {
         name: "Eurowings",
         aircrafts: ["A319", "A320", "A321"],
     },
+    V7: {
+        name: "Volotea",
+        aircrafts: ["A319", "A320"],
+    },
 };
 
 type SpecialLoad = {
@@ -74,9 +78,6 @@ export default function Loads() {
         if (company === "TVF") {
             if (aircraft === "B737-800") {
                 regraGeral = "H1 heavy · H2 50% · H3 50%";
-
-                // 1. SUBTRAIR / PREPARAR TOTAL
-                // Começamos com o peso líquido da bagagem e somamos os especiais designados para o split
                 let weightToDistribute = pesoBagagemLiquido;
                 const splitSpecials = specialLoads.filter(load => load.hold === "H2" || load.hold === "H3");
 
@@ -84,16 +85,11 @@ export default function Loads() {
                     weightToDistribute += load.weight;
                 });
 
-                // 2. DISTRIBUIR (50/50)
-                // Peças: Divisão simples das malas
                 const h2Pcs = Math.ceil(bags / 2);
-                const h3Pcs = bags - h2Pcs; // Garante que a soma das peças seja sempre exata
-
-                // Pesos: Divisão do peso total (Bags + Especiais de H2/H3)
+                const h3Pcs = bags - h2Pcs;
                 const h2WeightTotal = Math.round(weightToDistribute / 2);
                 const h3WeightTotal = weightToDistribute - h2WeightTotal; // Garante que o peso total bata 100%
 
-                // 3. SOMAR TUDO (Montar a sequência)
                 seq.push({
                     hold: "H2",
                     ruleLabel: "50% Bags",
@@ -108,18 +104,14 @@ export default function Loads() {
                     weight: h3WeightTotal
                 });
 
-                // 4. TRATAR LABELS E PORÕES EXTRAS (H1)
                 specialLoads.forEach(load => {
                     const existingStep = seq.find(s => s.hold === load.hold);
 
                     if (existingStep) {
-                        // Se o especial está no H2 ou H3, apenas adicionamos o nome ao label
-                        // O peso já foi incluído no cálculo do passo 2
                         if (!existingStep.ruleLabel.includes(load.type)) {
                             existingStep.ruleLabel += ` + ${load.type || "Special"}`;
                         }
                     } else {
-                        // Se for para o H1 (ou outro), entra como linha independente
                         seq.push({
                             hold: load.hold,
                             ruleLabel: load.type || "Special Load",
@@ -239,7 +231,7 @@ export default function Loads() {
 
                         if (existingStep) {
                             existingStep.ruleLabel += ` + ${load.type || "Special"}`;
-  
+
                         } else {
                             seq.push({
                                 hold: load.hold,
@@ -471,6 +463,143 @@ export default function Loads() {
                     }
                 });
             }
+        } else if (company === "V7") {
+            if (aircraft === "A319") {
+                regraGeral = "H4 85 bags (máx 3021kgs) · H5 30 bags (máx 1497kgs) · H1 rest (máx 2268kgs)";
+                const pesoMedio = bags > 0 ? pesoBagagemLiquido / bags : 0;
+                let malasRestantes = bags;
+                const specialWeightsByHold : any = {};
+                specialLoads.forEach(load => {
+                    specialWeightsByHold[load.hold] = (specialWeightsByHold[load.hold] || 0) + load.weight;
+                });
+
+                const calcularPorãoA319 = ({limitWeight, limitPcs, holdName} : any) => {
+                    const pesoEspecialNoHold = specialWeightsByHold[holdName] || 0;
+                    const espacoDisponivelParaMalas = Math.max(0, limitWeight - pesoEspecialNoHold);
+                    let qtdMalas = pesoMedio > 0 ? Math.floor(espacoDisponivelParaMalas / pesoMedio) : 0;
+                    if (limitPcs) qtdMalas = Math.min(qtdMalas, limitPcs);
+                    const finalBags = Math.min(malasRestantes, qtdMalas);
+                    malasRestantes -= finalBags;
+
+                    return {
+                        pcs: finalBags,
+                        weightBags: Math.round(finalBags * pesoMedio),
+                        weightSpecial: pesoEspecialNoHold
+                    };
+                };
+
+                const resH4 = calcularPorãoA319({ limitWeight: 3021, limitPcs: 85, holdName: "H4" });
+                const resH5 = calcularPorãoA319({ limitWeight: 1497, limitPcs: 30, holdName: "H5" });
+                const h1Bags = malasRestantes;
+                const pesoEspecialH1 = specialWeightsByHold["H1"] || 0;
+                const h1WeightBags = Math.max(0, Math.round(pesoBagagemLiquido - resH4.weightBags - resH5.weightBags));
+
+                const distribution: Record<string, { pcs: number; weight: number }> = {
+                    H4: { pcs: resH4.pcs, weight: resH4.weightBags + resH4.weightSpecial },
+                    H5: { pcs: resH5.pcs, weight: resH5.weightBags + resH5.weightSpecial },
+                    H1: { pcs: h1Bags, weight: h1WeightBags + pesoEspecialH1 }
+                };
+
+                const holdsConfig = [
+                    { id: "H4", label: "85 bags (máx 3021kg)" },
+                    { id: "H5", label: "30 bags (máx 1497kg)" },
+                    { id: "H1", label: "Rest (máx 2268kg)" }
+                ];
+
+                holdsConfig.forEach(conf => {
+                    seq.push({
+                        hold: conf.id,
+                        ruleLabel: conf.label,
+                        pcs: distribution[conf.id].pcs,
+                        weight: distribution[conf.id].weight
+                    });
+                });
+
+                specialLoads.forEach(load => {
+                    const existingStep = seq.find(s => s.hold === load.hold);
+                    if (existingStep) {
+                        if (!existingStep.ruleLabel.includes(load.type)) {
+                            existingStep.ruleLabel += ` + ${load.type}`;
+                        }
+                    } else {
+                        seq.push({
+                            hold: load.hold,
+                            ruleLabel: load.type,
+                            pcs: 0,
+                            weight: load.weight,
+                            isSpecialOnly: true
+                        });
+                    }
+                });
+
+            }
+            else if (aircraft === "A320") {
+                regraGeral = "H1 95 bags (máx 3402 kgs) · H3 55 bags (máx 2426 kgs) · H4 rest(máx 2110 kgs)";
+
+                 const pesoMedio = bags > 0 ? pesoBagagemLiquido / bags : 0;
+                let malasRestantes = bags;
+                const specialWeightsByHold : any = {};
+                specialLoads.forEach(load => {
+                    specialWeightsByHold[load.hold] = (specialWeightsByHold[load.hold] || 0) + load.weight;
+                });
+
+                const calcularPorãoA320 = ({limitWeight, limitPcs, holdName} : any) => {
+                    const pesoEspecialNoHold = specialWeightsByHold[holdName] || 0;
+                    const espacoDisponivelParaMalas = Math.max(0, limitWeight - pesoEspecialNoHold);
+                    let qtdMalas = pesoMedio > 0 ? Math.floor(espacoDisponivelParaMalas / pesoMedio) : 0;
+                    if (limitPcs) qtdMalas = Math.min(qtdMalas, limitPcs);
+                    const finalBags = Math.min(malasRestantes, qtdMalas);
+                    malasRestantes -= finalBags;
+
+                    return {
+                        pcs: finalBags,
+                        weightBags: Math.round(finalBags * pesoMedio),
+                        weightSpecial: pesoEspecialNoHold
+                    };
+                };
+
+                const resH1 = calcularPorãoA320({ limitWeight: 3402, limitPcs: 95, holdName: "H1" });
+                const resH3 = calcularPorãoA320({ limitWeight: 2426, limitPcs: 55, holdName: "H3" });
+                const resH4 = calcularPorãoA320({ limitWeight: 2110, limitPcs: null, holdName: "H4" });
+
+                const distribution: Record<string, { pcs: number; weight: number }> = {
+                    H1: { pcs: resH1.pcs, weight: resH1.weightBags + resH1.weightSpecial },
+                    H3: { pcs: resH3.pcs, weight: resH3.weightBags + resH3.weightSpecial },
+                    H4: { pcs: resH4.pcs, weight: resH4.weightBags + resH4.weightSpecial }
+                };
+
+                const holdsConfig = [
+                    { id: "H1", label: "95 bags (máx 3402 kgs)" },
+                    { id: "H3", label: "30 bags (máx 2426 kgs)" },
+                    { id: "H4", label: "Rest (máx 2110 kgs)" }
+                ];
+
+                holdsConfig.forEach(conf => {
+                    seq.push({
+                        hold: conf.id,
+                        ruleLabel: conf.label,
+                        pcs: distribution[conf.id].pcs,
+                        weight: distribution[conf.id].weight
+                    });
+                });
+
+                specialLoads.forEach(load => {
+                    const existingStep = seq.find(s => s.hold === load.hold);
+                    if (existingStep) {
+                        if (!existingStep.ruleLabel.includes(load.type)) {
+                            existingStep.ruleLabel += ` + ${load.type}`;
+                        }
+                    } else {
+                        seq.push({
+                            hold: load.hold,
+                            ruleLabel: load.type,
+                            pcs: 0,
+                            weight: load.weight,
+                            isSpecialOnly: true
+                        });
+                    }
+                });
+            }
         }
 
         return { sequence: seq, regraGeral };
@@ -497,6 +626,7 @@ export default function Loads() {
         setSpecialLoads([...specialLoads, { id: crypto.randomUUID(), type: tempType, weight: Number(tempWeight), hold: holdSelected }]);
         setTempWeight("");
     };
+
 
     return (
         <>

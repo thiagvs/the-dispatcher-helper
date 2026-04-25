@@ -81,7 +81,7 @@ const Tips: React.FC = () => {
         </div>
 
         <div className="flex justify-between border-b border-gray-800 pb-1">
-          <span className="text-yellow-400"><i>ICAO (3 letras)</i></span>
+          <span className="text-yellow-400"><b>ICAO (3 letras)</b></span>
         </div>
 
         <div className="flex justify-between border-b border-gray-800 pb-1">
