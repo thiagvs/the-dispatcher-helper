@@ -110,12 +110,14 @@ export default function Loads() {
                     if (existingStep) {
                         if (!existingStep.ruleLabel.includes(load.type)) {
                             existingStep.ruleLabel += ` + ${load.type || "Special"}`;
+                            existingStep.weight += load.weight;
+                            existingStep.pcs += 1; 
                         }
                     } else {
                         seq.push({
                             hold: load.hold,
                             ruleLabel: load.type || "Special Load",
-                            pcs: 0,
+                            pcs: 1,
                             weight: load.weight,
                             isSpecialOnly: true
                         });
@@ -148,11 +150,13 @@ export default function Loads() {
 
                     if (existingStep) {
                         existingStep.ruleLabel += ` + ${load.type || "Special"}`;
+                        existingStep.weight += load.weight;
+                        existingStep.pcs += 1; 
                     } else {
                         seq.push({
                             hold: load.hold,
                             ruleLabel: load.type || "Special Load",
-                            pcs: 0,
+                            pcs: 1,
                             weight: load.weight,
                             isSpecialOnly: true
                         });
@@ -175,11 +179,13 @@ export default function Loads() {
 
                         if (existingStep) {
                             existingStep.ruleLabel += ` + ${load.type || "Special"}`;
+                            existingStep.weight += load.weight;
+                            existingStep.pcs += 1; 
                         } else {
                             seq.push({
                                 hold: load.hold,
                                 ruleLabel: load.type || "Special Load",
-                                pcs: 0,
+                                pcs: 1,
                                 weight: load.weight,
                                 isSpecialOnly: true
                             });
@@ -231,12 +237,14 @@ export default function Loads() {
 
                         if (existingStep) {
                             existingStep.ruleLabel += ` + ${load.type || "Special"}`;
+                            existingStep.weight += load.weight;
+                            existingStep.pcs += 1; 
 
                         } else {
                             seq.push({
                                 hold: load.hold,
                                 ruleLabel: load.type || "Special Load",
-                                pcs: 0,
+                                pcs: 1,
                                 weight: load.weight,
                                 isSpecialOnly: true
                             });
@@ -245,7 +253,7 @@ export default function Loads() {
                 }
             }
 
-
+        // to-do: revisar regras da EZY com Bianca, necessário fazer!!!
         } else if (company === "EZY") {
             if (aircraft === "A319") {
                 regraGeral = "H1 rest · H4 ~100 pcs";
@@ -268,7 +276,9 @@ export default function Loads() {
                 seq.push({ hold: "H4", ruleLabel: "50 pcs", pcs: h4Bags + avihPcs + wchPcs, weight: h4Weight + avihWeight + wchWeight });
                 seq.push({ hold: "H2", ruleLabel: "Rest", pcs: Math.max(0, bags - h3Bags - h4Bags), weight: Math.max(0, weight - h3Weight - h4Weight) });
             }
-        } else if (company === "EW") {
+        }
+         // to-do: revisar regras da EZY com Bianca, necessário fazer!!!
+        else if (company === "EW") {
             if (aircraft === "A319") {
                 regraGeral = "H4 Max 85 pcs / 1350 kg · H5 450 kg · H1 rest";
                 const pesoMedio = bags > 0 ? pesoBagagemLiquido / bags : 0;
@@ -320,12 +330,14 @@ export default function Loads() {
                     if (existingStep) {
                         if (!existingStep.ruleLabel.includes(load.type)) {
                             existingStep.ruleLabel += ` + ${load.type || "Special"}`;
+                            existingStep.weight += load.weight;
+                            existingStep.pcs += 1; 
                         }
                     } else {
                         seq.push({
                             hold: load.hold,
                             ruleLabel: load.type || "Special Load",
-                            pcs: 0,
+                            pcs: 1,
                             weight: load.weight,
                             isSpecialOnly: true
                         });
@@ -392,12 +404,14 @@ export default function Loads() {
                     if (existingStep) {
                         if (!existingStep.ruleLabel.includes(load.type)) {
                             existingStep.ruleLabel += ` + ${load.type || "Special"}`;
+                            existingStep.weight += load.weight;
+                            existingStep.pcs += 1; 
                         }
                     } else {
                         seq.push({
                             hold: load.hold,
                             ruleLabel: load.type || "Special Load",
-                            pcs: 0,
+                            pcs: 1,
                             weight: load.weight,
                             isSpecialOnly: true
                         });
@@ -451,12 +465,14 @@ export default function Loads() {
                     if (step) {
                         if (!step.ruleLabel.includes(load.type)) {
                             step.ruleLabel += ` + ${load.type}`;
+                            step.weight += load.weight;
+                            step.pcs += 1;
                         }
                     } else {
                         seq.push({
                             hold: load.hold,
                             ruleLabel: load.type,
-                            pcs: 0,
+                            pcs: 1,
                             weight: load.weight,
                             isSpecialOnly: true
                         });
@@ -520,12 +536,14 @@ export default function Loads() {
                     if (existingStep) {
                         if (!existingStep.ruleLabel.includes(load.type)) {
                             existingStep.ruleLabel += ` + ${load.type}`;
+                            existingStep.weight += load.weight;
+                            existingStep.pcs += 1; 
                         }
                     } else {
                         seq.push({
                             hold: load.hold,
                             ruleLabel: load.type,
-                            pcs: 0,
+                            pcs: 1,
                             weight: load.weight,
                             isSpecialOnly: true
                         });
@@ -588,12 +606,14 @@ export default function Loads() {
                     if (existingStep) {
                         if (!existingStep.ruleLabel.includes(load.type)) {
                             existingStep.ruleLabel += ` + ${load.type}`;
+                            existingStep.weight += load.weight;
+                            existingStep.pcs += 1; 
                         }
                     } else {
                         seq.push({
                             hold: load.hold,
                             ruleLabel: load.type,
-                            pcs: 0,
+                            pcs: 1,
                             weight: load.weight,
                             isSpecialOnly: true
                         });
