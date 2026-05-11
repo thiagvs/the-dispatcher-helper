@@ -108,11 +108,9 @@ export default function Loads() {
                     const existingStep = seq.find(s => s.hold === load.hold);
 
                     if (existingStep) {
-                        if (!existingStep.ruleLabel.includes(load.type)) {
-                            existingStep.ruleLabel += ` + ${load.type || "Special"}`;
-                            existingStep.weight += load.weight;
-                            existingStep.pcs += 1; 
-                        }
+                        existingStep.ruleLabel += ` + ${load.type || "Special"}`;
+                        existingStep.weight += load.weight;
+                        existingStep.pcs += 1;
                     } else {
                         seq.push({
                             hold: load.hold,
@@ -147,11 +145,10 @@ export default function Loads() {
 
                 specialLoads.forEach(load => {
                     const existingStep = seq.find(s => s.hold === load.hold);
-
                     if (existingStep) {
                         existingStep.ruleLabel += ` + ${load.type || "Special"}`;
                         existingStep.weight += load.weight;
-                        existingStep.pcs += 1; 
+                        existingStep.pcs += 1;
                     } else {
                         seq.push({
                             hold: load.hold,
@@ -180,7 +177,7 @@ export default function Loads() {
                         if (existingStep) {
                             existingStep.ruleLabel += ` + ${load.type || "Special"}`;
                             existingStep.weight += load.weight;
-                            existingStep.pcs += 1; 
+                            existingStep.pcs += 1;
                         } else {
                             seq.push({
                                 hold: load.hold,
@@ -238,7 +235,7 @@ export default function Loads() {
                         if (existingStep) {
                             existingStep.ruleLabel += ` + ${load.type || "Special"}`;
                             existingStep.weight += load.weight;
-                            existingStep.pcs += 1; 
+                            existingStep.pcs += 1;
 
                         } else {
                             seq.push({
@@ -253,7 +250,7 @@ export default function Loads() {
                 }
             }
 
-        // to-do: revisar regras da EZY com Bianca, necessário fazer!!!
+            // to-do: revisar regras da EZY com Bianca, necessário fazer!!!
         } else if (company === "EZY") {
             if (aircraft === "A319") {
                 regraGeral = "H1 rest · H4 ~100 pcs";
@@ -277,7 +274,7 @@ export default function Loads() {
                 seq.push({ hold: "H2", ruleLabel: "Rest", pcs: Math.max(0, bags - h3Bags - h4Bags), weight: Math.max(0, weight - h3Weight - h4Weight) });
             }
         }
-         // to-do: revisar regras da EZY com Bianca, necessário fazer!!!
+        // to-do: revisar regras da EZY com Bianca, necessário fazer!!!
         else if (company === "EW") {
             if (aircraft === "A319") {
                 regraGeral = "H4 Max 85 pcs / 1350 kg · H5 450 kg · H1 rest";
@@ -328,11 +325,9 @@ export default function Loads() {
                 specialLoads.forEach(load => {
                     const existingStep = seq.find(s => s.hold === load.hold);
                     if (existingStep) {
-                        if (!existingStep.ruleLabel.includes(load.type)) {
-                            existingStep.ruleLabel += ` + ${load.type || "Special"}`;
-                            existingStep.weight += load.weight;
-                            existingStep.pcs += 1; 
-                        }
+                        existingStep.ruleLabel += ` + ${load.type || "Special"}`;
+                        existingStep.weight += load.weight;
+                        existingStep.pcs += 1;
                     } else {
                         seq.push({
                             hold: load.hold,
@@ -402,11 +397,9 @@ export default function Loads() {
                 specialLoads.forEach(load => {
                     const existingStep = seq.find(s => s.hold === load.hold);
                     if (existingStep) {
-                        if (!existingStep.ruleLabel.includes(load.type)) {
-                            existingStep.ruleLabel += ` + ${load.type || "Special"}`;
-                            existingStep.weight += load.weight;
-                            existingStep.pcs += 1; 
-                        }
+                        existingStep.ruleLabel += ` + ${load.type || "Special"}`;
+                        existingStep.weight += load.weight;
+                        existingStep.pcs += 1;
                     } else {
                         seq.push({
                             hold: load.hold,
@@ -484,12 +477,12 @@ export default function Loads() {
                 regraGeral = "H4 85 bags (máx 3021kgs) · H5 30 bags (máx 1497kgs) · H1 rest (máx 2268kgs)";
                 const pesoMedio = bags > 0 ? pesoBagagemLiquido / bags : 0;
                 let malasRestantes = bags;
-                const specialWeightsByHold : any = {};
+                const specialWeightsByHold: any = {};
                 specialLoads.forEach(load => {
                     specialWeightsByHold[load.hold] = (specialWeightsByHold[load.hold] || 0) + load.weight;
                 });
 
-                const calcularPorãoA319 = ({limitWeight, limitPcs, holdName} : any) => {
+                const calcularPorãoA319 = ({ limitWeight, limitPcs, holdName }: any) => {
                     const pesoEspecialNoHold = specialWeightsByHold[holdName] || 0;
                     const espacoDisponivelParaMalas = Math.max(0, limitWeight - pesoEspecialNoHold);
                     let qtdMalas = pesoMedio > 0 ? Math.floor(espacoDisponivelParaMalas / pesoMedio) : 0;
@@ -534,11 +527,9 @@ export default function Loads() {
                 specialLoads.forEach(load => {
                     const existingStep = seq.find(s => s.hold === load.hold);
                     if (existingStep) {
-                        if (!existingStep.ruleLabel.includes(load.type)) {
-                            existingStep.ruleLabel += ` + ${load.type}`;
-                            existingStep.weight += load.weight;
-                            existingStep.pcs += 1; 
-                        }
+                        existingStep.ruleLabel += ` + ${load.type}`;
+                        existingStep.weight += load.weight;
+                        existingStep.pcs += 1;
                     } else {
                         seq.push({
                             hold: load.hold,
@@ -554,14 +545,14 @@ export default function Loads() {
             else if (aircraft === "A320") {
                 regraGeral = "H1 95 bags (máx 3402 kgs) · H3 55 bags (máx 2426 kgs) · H4 rest(máx 2110 kgs)";
 
-                 const pesoMedio = bags > 0 ? pesoBagagemLiquido / bags : 0;
+                const pesoMedio = bags > 0 ? pesoBagagemLiquido / bags : 0;
                 let malasRestantes = bags;
-                const specialWeightsByHold : any = {};
+                const specialWeightsByHold: any = {};
                 specialLoads.forEach(load => {
                     specialWeightsByHold[load.hold] = (specialWeightsByHold[load.hold] || 0) + load.weight;
                 });
 
-                const calcularPorãoA320 = ({limitWeight, limitPcs, holdName} : any) => {
+                const calcularPorãoA320 = ({ limitWeight, limitPcs, holdName }: any) => {
                     const pesoEspecialNoHold = specialWeightsByHold[holdName] || 0;
                     const espacoDisponivelParaMalas = Math.max(0, limitWeight - pesoEspecialNoHold);
                     let qtdMalas = pesoMedio > 0 ? Math.floor(espacoDisponivelParaMalas / pesoMedio) : 0;
@@ -604,11 +595,9 @@ export default function Loads() {
                 specialLoads.forEach(load => {
                     const existingStep = seq.find(s => s.hold === load.hold);
                     if (existingStep) {
-                        if (!existingStep.ruleLabel.includes(load.type)) {
-                            existingStep.ruleLabel += ` + ${load.type}`;
-                            existingStep.weight += load.weight;
-                            existingStep.pcs += 1; 
-                        }
+                        existingStep.ruleLabel += ` + ${load.type}`;
+                        existingStep.weight += load.weight;
+                        existingStep.pcs += 1;
                     } else {
                         seq.push({
                             hold: load.hold,
