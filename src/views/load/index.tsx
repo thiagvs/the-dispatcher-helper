@@ -65,6 +65,8 @@ export default function Loads() {
         const wchPcs = wchItems.length;
 
         const weight = Math.max(0, totalWeightInput - avihWeight - wchWeight);
+        const specialPcs = specialLoads.length;
+        const bagsToDistribute = Math.max(0, bags - specialPcs);
         const bagWeightPerPiece = bags > 0 ? weight / bags : 0;
 
         const pesoTotalInput = Number(pesoTotal) || 0;
@@ -75,20 +77,48 @@ export default function Loads() {
         let regraGeral = "";
         let totalWeightToSplit = weight;
 
+        const addSpecialLoadsToSequence = () => {
+            specialLoads.forEach(load => {
+                const existingStep = seq.find(s => s.hold === load.hold);
+
+                if (existingStep) {
+                    if (!existingStep.ruleLabel.includes(load.type || "Special")) {
+                        existingStep.ruleLabel += ` + ${load.type || "Special"}`;
+                    }
+
+                    existingStep.pcs += 1;
+                } else {
+                    seq.push({
+                        hold: load.hold,
+                        ruleLabel: load.type || "Special Load",
+                        pcs: 1,
+                        weight: load.weight,
+                        isSpecialOnly: true
+                    });
+                }
+            });
+        };
+
         if (company === "TVF") {
             if (aircraft === "B737-800") {
+
                 regraGeral = "H1 heavy · H2 50% · H3 50%";
+
                 let weightToDistribute = pesoBagagemLiquido;
-                const splitSpecials = specialLoads.filter(load => load.hold === "H2" || load.hold === "H3");
+
+                const splitSpecials = specialLoads.filter(
+                    load => load.hold === "H2" || load.hold === "H3"
+                );
 
                 splitSpecials.forEach(load => {
                     weightToDistribute += load.weight;
                 });
 
-                const h2Pcs = Math.ceil(bags / 2);
-                const h3Pcs = bags - h2Pcs;
+                const h3Pcs = Math.ceil(bagsToDistribute / 2);
+                const h2Pcs = bagsToDistribute - h3Pcs;
+
                 const h2WeightTotal = Math.round(weightToDistribute / 2);
-                const h3WeightTotal = weightToDistribute - h2WeightTotal; // Garante que o peso total bata 100%
+                const h3WeightTotal = weightToDistribute - h2WeightTotal;
 
                 seq.push({
                     hold: "H2",
@@ -104,151 +134,107 @@ export default function Loads() {
                     weight: h3WeightTotal
                 });
 
-                specialLoads.forEach(load => {
-                    const existingStep = seq.find(s => s.hold === load.hold);
+                addSpecialLoadsToSequence();
 
-                    if (existingStep) {
-                        existingStep.ruleLabel += ` + ${load.type || "Special"}`;
-                        existingStep.weight += load.weight;
-                        existingStep.pcs += 1;
-                    } else {
-                        seq.push({
-                            hold: load.hold,
-                            ruleLabel: load.type || "Special Load",
-                            pcs: 1,
-                            weight: load.weight,
-                            isSpecialOnly: true
-                        });
-                    }
-                });
             } else if (aircraft === "A320") {
-                regraGeral = "H1 50% · H3 50%";
-                const splitSpecials = specialLoads.filter(load => load.hold === "H1" || load.hold === "H3");
+                  regraGeral = "H1 50% · H3 50%";
+
+            const splitSpecials = specialLoads.filter(
+                load => load.hold === "H1" || load.hold === "H3"
+            );
+
+            splitSpecials.forEach(load => {
+                totalWeightToSplit += load.weight;
+            });
+
+            const h3BasePcs = Math.ceil(bagsToDistribute / 2);
+            const h1BasePcs = Math.floor(bagsToDistribute / 2);
+
+            seq.push({
+                hold: "H1",
+                ruleLabel: "50% Bags",
+                pcs: h1BasePcs,
+                weight: Math.ceil(totalWeightToSplit / 2)
+            });
+
+            seq.push({
+                hold: "H3",
+                ruleLabel: "50% Bags",
+                pcs: h3BasePcs,
+                weight: Math.floor(totalWeightToSplit / 2)
+            });
+
+            addSpecialLoadsToSequence();
+            }else if (aircraft === "A321") {
+
+            if (weight <= 800) {
+
+                regraGeral = "≤ 800 kg H3 prioritário";
+
+                const splitSpecials = specialLoads.filter(
+                    load => load.hold === "H3"
+                );
 
                 splitSpecials.forEach(load => {
                     totalWeightToSplit += load.weight;
                 });
 
                 seq.push({
-                    hold: "H1",
-                    ruleLabel: "50% Bags",
-                    pcs: Math.ceil(bags / 2),
-                    weight: Math.ceil(totalWeightToSplit / 2)
+                    hold: "H3",
+                    ruleLabel: "Prioritário",
+                    pcs: bagsToDistribute,
+                    weight: weight
+                });
+
+                addSpecialLoadsToSequence();
+
+            } else {
+
+                regraGeral = "> 800 kg H2 30% · H3 40% · H4 30% · H2 rest · H5 AVIH";
+
+                const splitSpecials = specialLoads.filter(
+                    load =>
+                        load.hold === "H2" ||
+                        load.hold === "H3" ||
+                        load.hold === "H4"
+                );
+
+                splitSpecials.forEach(load => {
+                    totalWeightToSplit += load.weight;
+                });
+
+                let pcsH2 = Math.round(bagsToDistribute * 0.3);
+                let pcsH3 = Math.round(bagsToDistribute * 0.4);
+                let pcsH4 = bagsToDistribute - (pcsH2 + pcsH3);
+
+                let weightH2 = Math.round(totalWeightToSplit * 0.3);
+                let weightH3 = Math.round(totalWeightToSplit * 0.4);
+                let weightH4 = totalWeightToSplit - (weightH2 + weightH3);
+
+                seq.push({
+                    hold: "H2",
+                    ruleLabel: "30% Bags",
+                    pcs: pcsH2,
+                    weight: weightH2
                 });
 
                 seq.push({
                     hold: "H3",
-                    ruleLabel: "50% Bags",
-                    pcs: Math.floor(bags / 2),
-                    weight: Math.floor(totalWeightToSplit / 2)
+                    ruleLabel: "40% Bags",
+                    pcs: pcsH3,
+                    weight: weightH3
                 });
 
-                specialLoads.forEach(load => {
-                    const existingStep = seq.find(s => s.hold === load.hold);
-                    if (existingStep) {
-                        existingStep.ruleLabel += ` + ${load.type || "Special"}`;
-                        existingStep.weight += load.weight;
-                        existingStep.pcs += 1;
-                    } else {
-                        seq.push({
-                            hold: load.hold,
-                            ruleLabel: load.type || "Special Load",
-                            pcs: 1,
-                            weight: load.weight,
-                            isSpecialOnly: true
-                        });
-                    }
+                seq.push({
+                    hold: "H4",
+                    ruleLabel: "30% Bags",
+                    pcs: pcsH4,
+                    weight: weightH4
                 });
-            } else if (aircraft === "A321") {
-                if (weight <= 800) {
-                    regraGeral = "≤ 800 kg H3 prioritário";
-                    const splitSpecials = specialLoads.filter(load => load.hold === "H3");
 
-
-                    splitSpecials.forEach(load => {
-                        totalWeightToSplit += load.weight;
-                    });
-
-                    seq.push({ hold: "H3", ruleLabel: "Prioritário", pcs: bags, weight: weight });
-
-                    specialLoads.forEach(load => {
-                        const existingStep = seq.find(s => s.hold === load.hold);
-
-                        if (existingStep) {
-                            existingStep.ruleLabel += ` + ${load.type || "Special"}`;
-                            existingStep.weight += load.weight;
-                            existingStep.pcs += 1;
-                        } else {
-                            seq.push({
-                                hold: load.hold,
-                                ruleLabel: load.type || "Special Load",
-                                pcs: 1,
-                                weight: load.weight,
-                                isSpecialOnly: true
-                            });
-                        }
-                    });
-                } else {
-                    regraGeral = "> 800 kg H2 30% · H3 40% · H4 30% · H2 rest · H5 AVIH";
-
-                    const splitSpecials = specialLoads.filter(load => load.hold === "H2" || load.hold === "H3" || load.hold === "H4");
-
-                    splitSpecials.forEach(load => {
-                        totalWeightToSplit += load.weight;
-                    });
-
-                    // 2. Cálculo das Peças (evitando que sobrem ou faltem malas)
-                    let pcsH1 = Math.round(bags * 0.3);
-                    let pcsH3 = Math.round(bags * 0.4);
-                    let pcsH4 = bags - (pcsH1 + pcsH3); // O último porão pega o que sobrar para fechar 100%
-
-                    // 3. Cálculo dos Pesos (usando o totalWeightToSplit)
-                    let weightH1 = Math.round(totalWeightToSplit * 0.3);
-                    let weightH3 = Math.round(totalWeightToSplit * 0.4);
-                    let weightH4 = totalWeightToSplit - (weightH1 + weightH3); // Garante que o peso bruto total bata
-
-                    seq.push({
-                        hold: "H2",
-                        ruleLabel: "30% Bags",
-                        pcs: pcsH1,
-                        weight: weightH1
-                    });
-
-                    seq.push({
-                        hold: "H3",
-                        ruleLabel: "40% Bags",
-                        pcs: pcsH3,
-                        weight: weightH3
-                    });
-
-                    seq.push({
-                        hold: "H4",
-                        ruleLabel: "30% Bags",
-                        pcs: pcsH4,
-                        weight: weightH4
-                    });
-
-                    // 4. Processar labels dos especiais e adicionar porões extras (H1, H5)
-                    specialLoads.forEach(load => {
-                        const existingStep = seq.find(s => s.hold === load.hold);
-
-                        if (existingStep) {
-                            existingStep.ruleLabel += ` + ${load.type || "Special"}`;
-                            existingStep.weight += load.weight;
-                            existingStep.pcs += 1;
-
-                        } else {
-                            seq.push({
-                                hold: load.hold,
-                                ruleLabel: load.type || "Special Load",
-                                pcs: 1,
-                                weight: load.weight,
-                                isSpecialOnly: true
-                            });
-                        }
-                    });
-                }
+                addSpecialLoadsToSequence();
             }
+        }
 
             // to-do: revisar regras da EZY com Bianca, necessário fazer!!!
         } else if (company === "EZY") {
@@ -278,7 +264,7 @@ export default function Loads() {
         else if (company === "EW") {
             if (aircraft === "A319") {
                 regraGeral = "H4 Max 85 pcs / 1350 kg · H5 450 kg · H1 rest";
-                const pesoMedio = bags > 0 ? pesoBagagemLiquido / bags : 0;
+                const pesoMedio = bagsToDistribute > 0 ? pesoBagagemLiquido / bagsToDistribute : 0;
 
                 let weightSpecialsH4 = 0;
                 specialLoads.filter(l => l.hold === "H4").forEach(l => weightSpecialsH4 += l.weight);
@@ -286,14 +272,14 @@ export default function Loads() {
                 const espacoDisponivelH4 = Math.max(0, 1350 - weightSpecialsH4);
                 const maxPecasPorPesoH4 = pesoMedio > 0 ? Math.floor(espacoDisponivelH4 / pesoMedio) : 0;
 
-                const h4Bags = Math.min(bags, maxPecasPorPesoH4, 85);
+                const h4Bags = Math.min(bagsToDistribute, maxPecasPorPesoH4, 85);
                 const h4WeightBags = Math.round(h4Bags * pesoMedio);
 
                 let weightSpecialsH5 = 0;
                 specialLoads.filter(l => l.hold === "H5").forEach(l => weightSpecialsH5 += l.weight);
 
                 const espacoDisponivelH5 = Math.max(0, 450 - weightSpecialsH5);
-                const restanteBagsPosH4 = bags - h4Bags;
+                const restanteBagsPosH4 = bagsToDistribute - h4Bags;
                 const maxPecasH5 = pesoMedio > 0 ? Math.floor(espacoDisponivelH5 / pesoMedio) : 0;
 
                 const h5Bags = Math.min(restanteBagsPosH4, maxPecasH5);
@@ -340,8 +326,8 @@ export default function Loads() {
                 });
             } else if (aircraft === "A320") {
                 regraGeral = "H1 85pcs/1500kg · H3 1000kg · H4 1000kg · H5 rest";
-                const pesoMedio = bags > 0 ? pesoBagagemLiquido / bags : 0;
-                let malasRestantes = bags;
+                const pesoMedio = bagsToDistribute > 0 ? pesoBagagemLiquido / bagsToDistribute : 0;
+                let malasRestantes = bagsToDistribute;
                 const specialWeightsByHold: Record<string, number> = {};
                 specialLoads.forEach(load => {
                     specialWeightsByHold[load.hold] = (specialWeightsByHold[load.hold] || 0) + load.weight;
@@ -413,8 +399,8 @@ export default function Loads() {
             } else if (aircraft === "A321") {
                 regraGeral = "H3 500 kg · H2 500 kg · H1 500 kg (CLC)";
                 const MAX = 500;
-                const avgWeight = bags > 0 ? pesoBagagemLiquido / bags : 0;
-                let bagsRestantes = bags;
+                const avgWeight = bagsToDistribute > 0 ? pesoBagagemLiquido / bagsToDistribute : 0;
+                let bagsRestantes = bagsToDistribute;
                 const specialWeightsByHold: { [key: string]: number } = {};
                 specialLoads.forEach(load => {
                     specialWeightsByHold[load.hold] = (specialWeightsByHold[load.hold] || 0) + load.weight;
@@ -475,8 +461,8 @@ export default function Loads() {
         } else if (company === "V7") {
             if (aircraft === "A319") {
                 regraGeral = "H4 85 bags (máx 3021kgs) · H5 30 bags (máx 1497kgs) · H1 rest (máx 2268kgs)";
-                const pesoMedio = bags > 0 ? pesoBagagemLiquido / bags : 0;
-                let malasRestantes = bags;
+                const pesoMedio = bagsToDistribute > 0 ? pesoBagagemLiquido / bagsToDistribute : 0;
+                let malasRestantes = bagsToDistribute;
                 const specialWeightsByHold: any = {};
                 specialLoads.forEach(load => {
                     specialWeightsByHold[load.hold] = (specialWeightsByHold[load.hold] || 0) + load.weight;
