@@ -47,7 +47,6 @@ const Contacts: React.FC = () => {
           <p><span className="opacity-70">C. Incidências: </span> 62002</p>
           <p><span className="opacity-70">Tapete PART: </span> 61424</p>
           <p><span className="opacity-70">SOA: </span> 62613</p>
-
           <br />
           <p><span className="opacity-70">MyWay: </span> 63373 / 61742</p>
         </div>
