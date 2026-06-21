@@ -240,7 +240,7 @@ export default function Loads() {
                 }
             }
 
-        // to-do: revisar regras da EZY com Bianca, necessário fazer!!!
+            // to-do: revisar regras da EZY com Bianca, necessário fazer!!!
         } else if (company === "EZY") {
             if (aircraft === "A319") {
                 regraGeral = "H1 rest · H4 ~100 pcs";
@@ -332,40 +332,69 @@ export default function Loads() {
                 regraGeral = "H1 85pcs/1500kg · H3 1000kg · H4 1000kg · H5 rest";
                 const pesoMedio = bagsToDistribute > 0 ? pesoBagagemLiquido / bagsToDistribute : 0;
                 let malasRestantes = bagsToDistribute;
+                let pesoRestanteMalas = pesoBagagemLiquido;
+
+                // 1. Mapear pesos e peças especiais por porão ANTES da distribuição de malas
                 const specialWeightsByHold: Record<string, number> = {};
+                const specialPcsByHold: Record<string, number> = {};
+
                 specialLoads.forEach(load => {
                     specialWeightsByHold[load.hold] = (specialWeightsByHold[load.hold] || 0) + load.weight;
+                    specialPcsByHold[load.hold] = (specialPcsByHold[load.hold] || 0) + 1;
                 });
 
                 const calcularPorão = ({ limitWeight, limitPcs, holdName }: any) => {
                     const pesoEspecialNoHold = specialWeightsByHold[holdName] || 0;
+                    const pcsEspeciaisNoHold = specialPcsByHold[holdName] || 0;
+
+                    // Desconta o peso especial do limite do porão
                     const espacoDisponivel = Math.max(0, limitWeight - pesoEspecialNoHold);
 
+                    // NOVIDADE: Desconta a quantidade de peças especiais do limite de peças permitido
+                    let limitePcsMalas = limitPcs ? Math.max(0, limitPcs - pcsEspeciaisNoHold) : null;
+
                     let qtdMalas = pesoMedio > 0 ? Math.floor(espacoDisponivel / pesoMedio) : 0;
-                    if (limitPcs) qtdMalas = Math.min(qtdMalas, limitPcs);
+                    if (limitePcsMalas !== null) qtdMalas = Math.min(qtdMalas, limitePcsMalas);
 
                     const finalBags = Math.min(malasRestantes, qtdMalas);
                     malasRestantes -= finalBags;
 
+                    // Distribuição de peso dinâmica para eliminar dízimas e quilos fantasmas
+                    let weightBags = 0;
+                    if (finalBags > 0) {
+                        if (malasRestantes === 0) {
+                            weightBags = pesoRestanteMalas; // O último porão a receber malas absorve o resto exato
+                        } else {
+                            weightBags = Math.round(finalBags * pesoMedio);
+                        }
+                        pesoRestanteMalas -= weightBags;
+                    }
+
                     return {
                         pcs: finalBags,
-                        weightBags: Math.round(finalBags * pesoMedio),
-                        weightSpecial: pesoEspecialNoHold
+                        weightBags: weightBags
                     };
                 };
 
+                // 2. Executar a distribuição por ordem de prioridade da companhia
                 const resH1 = calcularPorão({ limitWeight: 1500, limitPcs: 85, holdName: "H1" });
                 const resH3 = calcularPorão({ limitWeight: 1000, limitPcs: null, holdName: "H3" });
                 const resH4 = calcularPorão({ limitWeight: 1000, limitPcs: null, holdName: "H4" });
-                const h5Bags = malasRestantes;
-                const pesoEspecialH5 = specialWeightsByHold["H5"] || 0;
-                const h5WeightBags = Math.max(0, Math.round(pesoBagagemLiquido - resH1.weightBags - resH3.weightBags - resH4.weightBags));
 
+                // H5 pega rigorosamente o que sobrou de malas e peso líquido
+                const h5Bags = malasRestantes;
+                let h5WeightBags = 0;
+                if (h5Bags > 0 || pesoRestanteMalas > 0) {
+                    h5WeightBags = pesoRestanteMalas;
+                    pesoRestanteMalas = 0;
+                }
+
+                // 3. Montar a estrutura da tabela APENAS com as malas calculadas
                 const distribution: Record<string, { pcs: number; weight: number }> = {
-                    H1: { pcs: resH1.pcs, weight: resH1.weightBags + resH1.weightSpecial },
-                    H3: { pcs: resH3.pcs, weight: resH3.weightBags + resH3.weightSpecial },
-                    H4: { pcs: resH4.pcs, weight: resH4.weightBags + resH4.weightSpecial },
-                    H5: { pcs: h5Bags, weight: h5WeightBags + pesoEspecialH5 }
+                    H1: { pcs: resH1.pcs, weight: resH1.weightBags },
+                    H3: { pcs: resH3.pcs, weight: resH3.weightBags },
+                    H4: { pcs: resH4.pcs, weight: resH4.weightBags },
+                    H5: { pcs: h5Bags, weight: h5WeightBags }
                 };
 
                 const holdsConfig = [
@@ -384,12 +413,15 @@ export default function Loads() {
                     });
                 });
 
+                // 4. Somar os especiais consolidando as peças e pesos de forma limpa
                 specialLoads.forEach(load => {
                     const existingStep = seq.find(s => s.hold === load.hold);
                     if (existingStep) {
-                        existingStep.ruleLabel += ` + ${load.type || "Special"}`;
+                        if (!existingStep.ruleLabel.includes(load.type)) {
+                            existingStep.ruleLabel += ` + ${load.type || "Special"}`;
+                        }
                         existingStep.weight += load.weight;
-                        existingStep.pcs += 1;
+                        existingStep.pcs += 1; // Soma o especial aqui com segurança total
                     } else {
                         seq.push({
                             hold: load.hold,
