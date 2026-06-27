@@ -6,6 +6,7 @@ import Tips from "./views/tips";
 import CompaniesRights from "./views/rights";
 import { CustomHeader } from "./components/customHeader";
 import CustomFooter from "./components/customFooter"; // Certifique-se de importar o Footer aqui
+import Delays from "./views/delays";
 
 const MainLayout = () => {
     return (
@@ -18,6 +19,7 @@ const MainLayout = () => {
                             <Route path="/" element={<Loads />} />
                             <Route path="/tips" element={<Tips />} />
                             <Route path="/contacts" element={<Contacts />} />
+                            <Route path="/delays" element={<Delays />} />
                             <Route path="/rights" element={<CompaniesRights />} />
                         </Routes>
                     </div>

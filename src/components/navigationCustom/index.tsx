@@ -6,12 +6,13 @@ import ViewListIcon from "@mui/icons-material/ViewList";
 import WorkIcon from "@mui/icons-material/Work";
 import PhoneIcon from "@mui/icons-material/Phone";
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
+import TableViewIcon from '@mui/icons-material/TableView';
 
 const NavigatorCustom: React.FC = () => {
     const [value, setValue] = React.useState(0);
     const navigate = useNavigate();
 
-    const routes = ["/", "/tips", "/contacts", "/rights"];
+    const routes = ["/", "/delays", "/tips", "/contacts", "/rights"];
 
     return (
         <>
@@ -27,6 +28,7 @@ const NavigatorCustom: React.FC = () => {
                     }}
                 >
                     <BottomNavigationAction label="Carregamento" style={{'color': '#9ca3af'}} icon={<WorkIcon />} />
+                    <BottomNavigationAction label="Delays" style={{'color': '#9ca3af'}} icon={<TableViewIcon />} />
                     <BottomNavigationAction label="Dicas" style={{'color': '#9ca3af'}} icon={<ViewListIcon />} />
                     <BottomNavigationAction label="Contatos e informações" style={{'color': '#9ca3af'}} icon={<PhoneIcon />} />
                     <BottomNavigationAction label="Direito das companhias" style={{'color': '#9ca3af'}} icon={<FolderCopyIcon />} />
