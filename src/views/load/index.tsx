@@ -669,7 +669,7 @@ export default function Loads() {
 
                 addSpecialLoadsToSequence();
 
-            } else if (aircraft === "B737-800") {
+            } else if (aircraft === "B737-300") {
                 regraGeral = "B733: 20 H4 -> 100 H3 -> Restante H2 | Carregamento Fwd/Aft Simultâneo";
                 const h4Pcs = Math.min(bags, 20);
                 let remainingBags = bags - h4Pcs;
