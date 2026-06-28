@@ -19,7 +19,7 @@ const companies = {
     },
     LS: {
         name: "Jet2",
-        aircrafts: ["B737-800", "B787-300", "A321", "A330"],
+        aircrafts: ["B737-300", "B737-800", "A321"],
     }
 };
 
@@ -632,43 +632,84 @@ export default function Loads() {
                 });
             }
         } else if (company === "LS") {
-            regraGeral = "H2 1/3 e H3 2/3";
             hint = "H1 - WC (não aceita AVIH)";
+            if (aircraft === "B737-800") {
+                regraGeral = "H2 1/3 e H3 2/3";
 
-            let weightToDistribute = pesoBagagemLiquido;
-            const splitSpecials = specialLoads.filter(load => load.hold === "H2" || load.hold === "H3");
+                let weightToDistribute = pesoBagagemLiquido;
+                const splitSpecials = specialLoads.filter(load => load.hold === "H2" || load.hold === "H3");
 
-            splitSpecials.forEach(load => {
-                weightToDistribute += load.weight;
-            });
+                splitSpecials.forEach(load => {
+                    weightToDistribute += load.weight;
+                });
 
-            // 2. DISTRIBUIR PEÇAS (1/3 para H2 e o Resto para H3)
-            // Usamos Math.round para evitar que 0.333 quebre a lógica, ou Math.floor se preferir arredondar para baixo
-            const h2Pcs = Math.round(bags / 3);
-            const h3Pcs = bags - h2Pcs; // O H3 absorve exatamente as malas restantes
+                // 2. DISTRIBUIR PEÇAS (1/3 para H2 e o Resto para H3)
+                // Usamos Math.round para evitar que 0.333 quebre a lógica, ou Math.floor se preferir arredondar para baixo
+                const h2Pcs = Math.round(bags / 3);
+                const h3Pcs = bags - h2Pcs; // O H3 absorve exatamente as malas restantes
 
-            // 3. DISTRIBUIR PESOS (1/3 para H2 e o Resto para H3)
-            const h2WeightTotal = Math.round(weightToDistribute / 3);
-            const h3WeightTotal = weightToDistribute - h2WeightTotal; // Garante que a soma total feche perfeitamente
+                // 3. DISTRIBUIR PESOS (1/3 para H2 e o Resto para H3)
+                const h2WeightTotal = Math.round(weightToDistribute / 3);
+                const h3WeightTotal = weightToDistribute - h2WeightTotal; // Garante que a soma total feche perfeitamente
 
-            // 4. SOMAR TUDO (Alimentar a sequência de exibição)
-            seq.push({
-                hold: "H2",
-                ruleLabel: "1/3 Bags",
-                pcs: h2Pcs,
-                weight: h2WeightTotal
-            });
+                // 4. SOMAR TUDO (Alimentar a sequência de exibição)
+                seq.push({
+                    hold: "H2",
+                    ruleLabel: "1/3 Bags",
+                    pcs: h2Pcs,
+                    weight: h2WeightTotal
+                });
 
-            seq.push({
-                hold: "H3",
-                ruleLabel: "2/3 Bags",
-                pcs: h3Pcs,
-                weight: h3WeightTotal
-            });
+                seq.push({
+                    hold: "H3",
+                    ruleLabel: "2/3 Bags",
+                    pcs: h3Pcs,
+                    weight: h3WeightTotal
+                });
+
+                addSpecialLoadsToSequence();
+            }
+        } else if (aircraft === "B737-800") {
+            regraGeral = "B733: 20 H4 -> 100 H3 -> Restante H2 | Carregamento Fwd/Aft Simultâneo";
+            const h4Pcs = Math.min(bags, 20);
+            let remainingBags = bags - h4Pcs;
+            const h3Pcs = Math.min(remainingBags, 100);
+            const h2Pcs = remainingBags - h3Pcs;
+
+            // Distribuição proporcional dos pesos baseada nas peças
+            const avgWeight = bags > 0 ? (pesoBagagemLiquido / bags) : 0;
+            const h4Weight = Math.round(h4Pcs * avgWeight);
+            const h3Weight = Math.round(h3Pcs * avgWeight);
+            const h2Weight = pesoBagagemLiquido - h4Weight - h3Weight; // Absorve resíduo de arredondamento
+
+            // Alimenta a sequência se houver peças
+            if (h4Pcs > 0) seq.push({ hold: "H4", ruleLabel: "First 20 Bags", pcs: h4Pcs, weight: h4Weight });
+            if (h3Pcs > 0) seq.push({ hold: "H3", ruleLabel: "Next 100 Bags", pcs: h3Pcs, weight: h3Weight });
+            if (h2Pcs > 0) seq.push({ hold: "H2", ruleLabel: "Remainder Bags", pcs: h2Pcs, weight: h2Weight });
 
             addSpecialLoadsToSequence();
         }
+        else if (aircraft === "A321") {
+            regraGeral = "80 H3 -> 60 H4 -> Restante H2 | Descarregar min 50 do REAR primeiro";
 
+            const h3Pcs = Math.min(bags, 80);
+            let remainingBags = bags - h3Pcs;
+            const h4Pcs = Math.min(remainingBags, 60);
+            const h2Pcs = remainingBags - h4Pcs;
+
+            // Distribuição proporcional dos pesos baseada nas peças
+            const avgWeight = bags > 0 ? (pesoBagagemLiquido / bags) : 0;
+            const h3Weight = Math.round(h3Pcs * avgWeight);
+            const h4Weight = Math.round(h4Pcs * avgWeight);
+            const h2Weight = pesoBagagemLiquido - h3Weight - h4Weight; // Absorve resíduo de arredondamento
+
+            // Alimenta a sequência se houver peças
+            if (h3Pcs > 0) seq.push({ hold: "H3", ruleLabel: "First 80 Bags", pcs: h3Pcs, weight: h3Weight });
+            if (h4Pcs > 0) seq.push({ hold: "H4", ruleLabel: "Next 60 Bags", pcs: h4Pcs, weight: h4Weight });
+            if (h2Pcs > 0) seq.push({ hold: "H2", ruleLabel: "Remainder Bags", pcs: h2Pcs, weight: h2Weight });
+
+             addSpecialLoadsToSequence();
+        }
 
         return { sequence: seq, regraGeral, hint };
     };
