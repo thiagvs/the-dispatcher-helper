@@ -932,17 +932,29 @@ export default function Loads() {
 
                 )}
                 <main className="mt-12 opacity-80"></main>
-                {isLdmModalOpen && (
-                    <div>
-                        <br />
-                        <LdmModal
-                            cargoData={{ company: company, h1: dist?.sequence.filter((step) => step.hold === 'H1').pop()?.weight || 0, h2: dist?.sequence.filter((step) => step.hold === 'H2').pop()?.weight || 0, h3: dist?.sequence.filter((step) => step.hold === 'H3').pop()?.weight || 0, h4: dist?.sequence.filter((step) => step.hold === 'H4').pop()?.weight || 0 }}
-                            onClose={() => setIsLdmModalOpen(false)}
-                        />
-
-                    </div>
-
-                )}
+               {isLdmModalOpen && (
+    <div>
+        <br />
+        <LdmModal
+            cargoData={{ 
+                company: company, 
+                // Pesos
+                h1: dist?.sequence.filter((step) => step.hold === 'H1').pop()?.weight || 0, 
+                h2: dist?.sequence.filter((step) => step.hold === 'H2').pop()?.weight || 0, 
+                h3: dist?.sequence.filter((step) => step.hold === 'H3').pop()?.weight || 0, 
+                h4: dist?.sequence.filter((step) => step.hold === 'H4').pop()?.weight || 0,
+                h5: dist?.sequence.filter((step) => step.hold === 'H5').pop()?.weight || 0,
+                // Peças (Opcional, usado pela Eurowings)
+                h1Pcs: dist?.sequence.filter((step) => step.hold === 'H1').pop()?.pcs || 0,
+                h2Pcs: dist?.sequence.filter((step) => step.hold === 'H2').pop()?.pcs || 0,
+                h3Pcs: dist?.sequence.filter((step) => step.hold === 'H3').pop()?.pcs || 0,
+                h4Pcs: dist?.sequence.filter((step) => step.hold === 'H4').pop()?.pcs || 0,
+                h5Pcs: dist?.sequence.filter((step) => step.hold === 'H5').pop()?.pcs || 0
+            }}
+            onClose={() => setIsLdmModalOpen(false)}
+        />
+    </div>
+)}
             </div>
         </>
     );
