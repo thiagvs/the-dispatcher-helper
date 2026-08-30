@@ -6,6 +6,12 @@ interface CargoData {
     h2: number;
     h3: number;
     h4: number;
+    h5: number;
+    h1Pcs?: number;
+    h2Pcs?: number;
+    h3Pcs?: number;
+    h4Pcs?: number;
+    h5Pcs?: number;
 }
 
 export default function LdmModal({ cargoData, onClose }: { cargoData: CargoData, onClose: () => void }) {
@@ -34,7 +40,7 @@ export default function LdmModal({ cargoData, onClose }: { cargoData: CargoData,
 
     const ldmString = useMemo(() => {
         const { company, flightNumber, day, registration, capacity, crew, destination, males, females, children, infants, pad, bt } = formData;
-        const { h1, h2, h3, h4 } = cargoData;
+        const { h1, h2, h3, h4, h5, h1Pcs = 0, h2Pcs = 0, h3Pcs = 0, h4Pcs = 0, h5Pcs = 0 } = cargoData;
 
         // Lógica exclusiva para Eurowings (EW)
         if (company === 'EW') {
@@ -44,11 +50,12 @@ export default function LdmModal({ cargoData, onClose }: { cargoData: CargoData,
             ewStr += `Child ${children}\n`;
             ewStr += `Infant ${infants}\n\n`;
             // Como CargoData só tem os pesos, as unidades ficam ocultas ou prontas para edição manual antes de enviar
-            ewStr += `H1 /${h1}\n`;
-            ewStr += `H2 /${h2}\n`;
-            ewStr += `H3 /${h3}\n`;
-            ewStr += `H4 /${h4}`;
-            
+           ewStr += `H1 ${h1Pcs}/${h1}\n`;
+            ewStr += `H2 ${h2Pcs}/${h2}\n`;
+            ewStr += `H3 ${h3Pcs}/${h3}\n`;
+            ewStr += `H4 ${h4Pcs}/${h4}\n`;
+            ewStr += `H5 ${h5Pcs}/${h5}`;
+
             if (bt && bt.trim() !== '' && bt !== '0') {
                 ewStr += `\n\nBT ${bt}`;
             }
@@ -56,11 +63,11 @@ export default function LdmModal({ cargoData, onClose }: { cargoData: CargoData,
         }
 
         // Lógica Padrão para demais companhias
-        const totalWeight = h1 + h2 + h3 + h4;
+        const totalWeight = h1 + h2 + h3 + h4 + h5;
         const totalPax = (parseInt(males) || 0) + (parseInt(females) || 0) + (parseInt(children) || 0);
 
         const line1 = `${company}${flightNumber}/${day}.${registration}.${capacity}Y.${crew}`;
-        const line2 = `-${destination}.${males}/${females}/${children}/${infants}.T${totalWeight}.H1/${h1}.H2/${h2}.H3/${h3}.H4/${h4}.PAX/${totalPax}.PAD/${pad}`;
+        const line2 = `-${destination}.${males}/${females}/${children}/${infants}.T${totalWeight}.H1/${h1}.H2/${h2}.H3/${h3}.H4/${h4}.H5/${h5}.PAX/${totalPax}.PAD/${pad}`;
 
         return `${line1}\n${line2}`;
     }, [formData, cargoData]);
@@ -110,11 +117,6 @@ export default function LdmModal({ cargoData, onClose }: { cargoData: CargoData,
                             <input type="text" name="destination" value={formData.destination} onChange={handleInputChange} className="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" maxLength={3} />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-400 uppercase">PAD (Extra)</label>
-                            <input type="text" name="pad" value={formData.pad} onChange={handleInputChange} className="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
-                        </div>
-
-                        <div className="space-y-1">
                             <label className="text-xs font-bold text-slate-400 uppercase text-blue-400">Males (M)</label>
                             <input type="number" name="males" value={formData.males} onChange={handleInputChange} min="0" className="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                         </div>
@@ -130,7 +132,7 @@ export default function LdmModal({ cargoData, onClose }: { cargoData: CargoData,
                             <label className="text-xs font-bold text-slate-400 uppercase text-emerald-400">Infant (INF)</label>
                             <input type="number" name="infants" value={formData.infants} onChange={handleInputChange} min="0" className="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                         </div>
-                        
+
                         {/* Novo campo para Bagagem em Trânsito (BT) */}
                         <div className="space-y-1 md:col-span-4">
                             <label className="text-xs font-bold text-slate-400 uppercase text-orange-400">Bagagem em Trânsito (BT) - Apenas se houver</label>
