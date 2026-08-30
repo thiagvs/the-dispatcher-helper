@@ -23,7 +23,8 @@ export default function LdmModal({ cargoData, onClose }: { cargoData: CargoData,
         females: '0',
         children: '0',
         infants: '0',
-        pad: '0'
+        pad: '0',
+        bt: '' // Novo campo para Bagagem em Trânsito
     });
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,18 +32,38 @@ export default function LdmModal({ cargoData, onClose }: { cargoData: CargoData,
         setFormData(prev => ({ ...prev, [name]: value.toUpperCase() }));
     };
 
-    const totalWeight = cargoData.h1 + cargoData.h2 + cargoData.h3 + cargoData.h4;
-    const totalPax = (parseInt(formData.males) || 0) + (parseInt(formData.females) || 0) + (parseInt(formData.children) || 0);
-
     const ldmString = useMemo(() => {
-        const { company, flightNumber, day, registration, capacity, crew, destination, males, females, children, infants, pad } = formData;
+        const { company, flightNumber, day, registration, capacity, crew, destination, males, females, children, infants, pad, bt } = formData;
         const { h1, h2, h3, h4 } = cargoData;
+
+        // Lógica exclusiva para Eurowings (EW)
+        if (company === 'EW') {
+            let ewStr = `Voo: ${company}${flightNumber}\n\n`;
+            ewStr += `Males ${males}\n`;
+            ewStr += `Females ${females}\n`;
+            ewStr += `Child ${children}\n`;
+            ewStr += `Infant ${infants}\n\n`;
+            // Como CargoData só tem os pesos, as unidades ficam ocultas ou prontas para edição manual antes de enviar
+            ewStr += `H1 /${h1}\n`;
+            ewStr += `H2 /${h2}\n`;
+            ewStr += `H3 /${h3}\n`;
+            ewStr += `H4 /${h4}`;
+            
+            if (bt && bt.trim() !== '' && bt !== '0') {
+                ewStr += `\n\nBT ${bt}`;
+            }
+            return ewStr;
+        }
+
+        // Lógica Padrão para demais companhias
+        const totalWeight = h1 + h2 + h3 + h4;
+        const totalPax = (parseInt(males) || 0) + (parseInt(females) || 0) + (parseInt(children) || 0);
 
         const line1 = `${company}${flightNumber}/${day}.${registration}.${capacity}Y.${crew}`;
         const line2 = `-${destination}.${males}/${females}/${children}/${infants}.T${totalWeight}.H1/${h1}.H2/${h2}.H3/${h3}.H4/${h4}.PAX/${totalPax}.PAD/${pad}`;
 
         return `${line1}\n${line2}`;
-    }, [formData, cargoData, totalWeight, totalPax]);
+    }, [formData, cargoData]);
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(ldmString);
@@ -50,8 +71,6 @@ export default function LdmModal({ cargoData, onClose }: { cargoData: CargoData,
     };
 
     return (
-        // Estas classes (fixed, inset-0, z-[9999]) forçam o modal a cobrir a tela inteira, flutuando por cima de tudo
-        
         <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
             <div className="bg-slate-800 rounded-xl shadow-2xl border border-slate-600 w-full max-w-3xl overflow-hidden flex flex-col">
 
@@ -88,7 +107,7 @@ export default function LdmModal({ cargoData, onClose }: { cargoData: CargoData,
                         </div>
                         <div className="space-y-1">
                             <label className="text-xs font-bold text-slate-400 uppercase">Destino</label>
-                            <input type="text" name="destination" value={formData.destination} onChange={handleInputChange} className="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+                            <input type="text" name="destination" value={formData.destination} onChange={handleInputChange} className="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" maxLength={3} />
                         </div>
                         <div className="space-y-1">
                             <label className="text-xs font-bold text-slate-400 uppercase">PAD (Extra)</label>
@@ -110,6 +129,12 @@ export default function LdmModal({ cargoData, onClose }: { cargoData: CargoData,
                         <div className="space-y-1">
                             <label className="text-xs font-bold text-slate-400 uppercase text-emerald-400">Infant (INF)</label>
                             <input type="number" name="infants" value={formData.infants} onChange={handleInputChange} min="0" className="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+                        </div>
+                        
+                        {/* Novo campo para Bagagem em Trânsito (BT) */}
+                        <div className="space-y-1 md:col-span-4">
+                            <label className="text-xs font-bold text-slate-400 uppercase text-orange-400">Bagagem em Trânsito (BT) - Apenas se houver</label>
+                            <input type="text" name="bt" value={formData.bt} onChange={handleInputChange} placeholder="Ex: 10/150" className="w-full md:w-1/4 bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                         </div>
                     </div>
 
