@@ -1,5 +1,6 @@
 import { useState } from "react";
 import LdmModal from "../modalLDM";
+import { useLocalStorage } from './../../hooks/useLocalStorage';
 
 const companies = {
     EZY: {
@@ -47,15 +48,16 @@ type LoadingStep = {
 
 
 export default function Loads() {
-    const [company, setCompany] = useState<keyof typeof companies | "">("");
-    const [aircraft, setAircraft] = useState("");
-    const [pesoTotal, setPesoTotal] = useState<number | "">("");
-    const [totalBags, setTotalBags] = useState<number | "">("");
-    const [specialLoads, setSpecialLoads] = useState<SpecialLoad[]>([]);
+    const [company, setCompany] = useLocalStorage<keyof typeof companies | "">("dh-company", "");
+    const [aircraft, setAircraft] = useLocalStorage<string>("dh-aircraft", "");
+    const [pesoTotal, setPesoTotal] = useLocalStorage<number | "">("dh-pesoTotal", "");
+    const [totalBags, setTotalBags] = useLocalStorage<number | "">("dh-totalBags", "");
+    const [specialLoads, setSpecialLoads] = useLocalStorage<SpecialLoad[]>("dh-specialLoads", []);
     const [tempType, setTempType] = useState<"AVIH" | "WCMP" | "WCBD" | "WCBW" | "WCLB">("AVIH");
     const [tempWeight, setTempWeight] = useState<number | "">("");
     const [holdSelected, setHoldSelected] = useState<"H1" | "H2" | "H3" | "H4" | "H5">("H1");
     const [isLdmModalOpen, setIsLdmModalOpen] = useState(false);
+
     const getDistribution = (): Distribution | null => {
         if (!company || !aircraft) return null;
 
@@ -737,6 +739,24 @@ export default function Loads() {
         setTempWeight("");
     };
 
+    // 3. FUNÇÃO DE LIMPEZA
+    // Chame esta função no botão de "Finalizar Voo" para zerar o sistema
+    const limparDados = () => {
+        if (window.confirm("Deseja limpar todos os dados deste voo?")) {
+            setCompany("");
+            setAircraft("");
+            setPesoTotal("");
+            setTotalBags("");
+            setSpecialLoads([]);
+
+            // Remove as chaves do navegador
+            window.localStorage.removeItem("dh-company");
+            window.localStorage.removeItem("dh-aircraft");
+            window.localStorage.removeItem("dh-pesoTotal");
+            window.localStorage.removeItem("dh-totalBags");
+            window.localStorage.removeItem("dh-specialLoads");
+        }
+    };
 
     return (
         <>
@@ -921,6 +941,7 @@ export default function Loads() {
                         </div>
 
                         <div>
+                            <button onClick={limparDados}>Finalizar Voo / Limpar</button>
                             <button
                                 onClick={() => setIsLdmModalOpen(true)}
                                 className="bg-slate-900 text-white px-3 py-2 rounded font-bold hover:bg-slate-700 transition"
@@ -932,29 +953,29 @@ export default function Loads() {
 
                 )}
                 <main className="mt-12 opacity-80"></main>
-               {isLdmModalOpen && (
-    <div>
-        <br />
-        <LdmModal
-            cargoData={{ 
-                company: company, 
-                // Pesos
-                h1: dist?.sequence.filter((step) => step.hold === 'H1').pop()?.weight || 0, 
-                h2: dist?.sequence.filter((step) => step.hold === 'H2').pop()?.weight || 0, 
-                h3: dist?.sequence.filter((step) => step.hold === 'H3').pop()?.weight || 0, 
-                h4: dist?.sequence.filter((step) => step.hold === 'H4').pop()?.weight || 0,
-                h5: dist?.sequence.filter((step) => step.hold === 'H5').pop()?.weight || 0,
-                // Peças (Opcional, usado pela Eurowings)
-                h1Pcs: dist?.sequence.filter((step) => step.hold === 'H1').pop()?.pcs || 0,
-                h2Pcs: dist?.sequence.filter((step) => step.hold === 'H2').pop()?.pcs || 0,
-                h3Pcs: dist?.sequence.filter((step) => step.hold === 'H3').pop()?.pcs || 0,
-                h4Pcs: dist?.sequence.filter((step) => step.hold === 'H4').pop()?.pcs || 0,
-                h5Pcs: dist?.sequence.filter((step) => step.hold === 'H5').pop()?.pcs || 0
-            }}
-            onClose={() => setIsLdmModalOpen(false)}
-        />
-    </div>
-)}
+                {isLdmModalOpen && (
+                    <div>
+                        <br />
+                        <LdmModal
+                            cargoData={{
+                                company: company,
+                                // Pesos
+                                h1: dist?.sequence.filter((step) => step.hold === 'H1').pop()?.weight || 0,
+                                h2: dist?.sequence.filter((step) => step.hold === 'H2').pop()?.weight || 0,
+                                h3: dist?.sequence.filter((step) => step.hold === 'H3').pop()?.weight || 0,
+                                h4: dist?.sequence.filter((step) => step.hold === 'H4').pop()?.weight || 0,
+                                h5: dist?.sequence.filter((step) => step.hold === 'H5').pop()?.weight || 0,
+                                // Peças (Opcional, usado pela Eurowings)
+                                h1Pcs: dist?.sequence.filter((step) => step.hold === 'H1').pop()?.pcs || 0,
+                                h2Pcs: dist?.sequence.filter((step) => step.hold === 'H2').pop()?.pcs || 0,
+                                h3Pcs: dist?.sequence.filter((step) => step.hold === 'H3').pop()?.pcs || 0,
+                                h4Pcs: dist?.sequence.filter((step) => step.hold === 'H4').pop()?.pcs || 0,
+                                h5Pcs: dist?.sequence.filter((step) => step.hold === 'H5').pop()?.pcs || 0
+                            }}
+                            onClose={() => setIsLdmModalOpen(false)}
+                        />
+                    </div>
+                )}
             </div>
         </>
     );
