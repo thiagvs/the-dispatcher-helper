@@ -1,58 +1,245 @@
-import React from 'react';
+import React, { useState } from 'react';
+import {
+  Box,
+  Paper,
+  Typography,
+  Grid,
+  TextField,
+  InputAdornment,
+  IconButton,
+  Chip,
+  Tooltip,
+  Divider
+} from '@mui/material';
+import {
+  Search as SearchIcon,
+  Radio as RadioIcon,
+  Business as BusinessIcon,
+  Email as EmailIcon,
+  VpnKey as KeyIcon,
+  ContentCopy as CopyIcon,
+  Check as CheckIcon,
+  LocalAirport as AirportIcon
+} from '@mui/icons-material';
 
-const Contacts: React.FC = () => {
+// Interface de Contato
+interface ContactItem {
+  label: string;
+  value: string;
+  subValue?: string;
+  type?: 'phone' | 'vhf' | 'email' | 'cred';
+}
+
+interface ContactCategory {
+  title: string;
+  icon: React.ReactNode;
+  color: string;
+  items: ContactItem[];
+}
+
+export default function Contacts() {
+  const [search, setSearch] = useState('');
+  const [copiedValue, setCopiedValue] = useState<string | null>(null);
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedValue(text);
+    setTimeout(() => setCopiedValue(null), 2000);
+  };
+
+  // Dados higienizados, organizados e sem duplicatas
+  const categories: ContactCategory[] = [
+    {
+      title: 'Frequências & Telefones Externos',
+      icon: <RadioIcon sx={{ color: '#38bdf8' }} />,
+      color: '#38bdf8',
+      items: [
+        { label: 'Portway VHF', value: '131.875', type: 'vhf' },
+        { label: 'FAO Safety', value: '131.450', type: 'vhf' },
+        { label: 'Portway Geral', value: '289 559 405', type: 'phone' },
+        { label: 'Aeroporto Geral', value: '289 800 800', type: 'phone' }
+      ]
+    },
+    {
+      title: 'Operações & Supervisão',
+      icon: <BusinessIcon sx={{ color: '#34d399' }} />,
+      color: '#34d399',
+      items: [
+        { label: 'Supervisão', value: '61496 / 62405', type: 'phone' },
+        { label: 'Coordenação', value: '62401', type: 'phone' },
+        { label: 'Suporte Ops', value: '62428', type: 'phone' },
+        { label: 'C. Incidências', value: '62002', type: 'phone' },
+        { label: 'SOA', value: '62613', type: 'phone' },
+        { label: 'Carga', value: '62625', type: 'phone' },
+        { label: 'PSP', value: '62688', type: 'phone' },
+        { label: 'Recursos Humanos (RH)', value: '62410', type: 'phone' }
+      ]
+    },
+    {
+      title: 'Atendimento & Infraestrutura',
+      icon: <AirportIcon sx={{ color: '#facc15' }} />,
+      color: '#facc15',
+      items: [
+        { label: 'Balcão', value: '62406 / 62885', type: 'phone' },
+        { label: 'Check-in (CKIN)', value: '636 + N°', type: 'phone' },
+        { label: 'Lost & Found', value: '62407', type: 'phone' },
+        { label: 'MyWay', value: '63373 / 61742', type: 'phone' },
+        { label: 'Sala de Descanso', value: '61498', type: 'phone' },
+        { label: 'Tapete PART', value: '61424', type: 'phone' },
+        { label: 'Mangas', value: '630 + N° Manga', type: 'phone' },
+        { label: 'Porta 322', value: '61303', type: 'phone' },
+        { label: 'Portas Remoto', value: '638 + N° Porta', type: 'phone' }
+      ]
+    },
+    {
+      title: 'E-mails Operacionais',
+      icon: <EmailIcon sx={{ color: '#f472b6' }} />,
+      color: '#f472b6',
+      items: [
+        { label: 'Supervisão Pax', value: 'supervisaopaxfao@portway.pt', type: 'email' },
+        { label: 'Suporte Ops', value: 'Opssupport.fao@portway.pt', type: 'email' }
+      ]
+    },
+    {
+      title: 'Sistemas & Credenciais',
+      icon: <KeyIcon sx={{ color: '#fb923c' }} />,
+      color: '#fb923c',
+      items: [
+        { label: 'GoPads', value: 'Ptw.fao.f4s', subValue: 'Pass: 654321', type: 'cred' },
+        { label: 'GoPadsGate', value: 'Ptw', subValue: 'Pass: 123456', type: 'cred' },
+        { label: 'MyWayAPP', value: 'Ptw.fao', subValue: 'Pass: portway01', type: 'cred' }
+      ]
+    }
+  ];
+
+  // Filtro de busca simples
+  const filteredCategories = categories.map(cat => ({
+    ...cat,
+    items: cat.items.filter(item =>
+      item.label.toLowerCase().includes(search.toLowerCase()) ||
+      item.value.toLowerCase().includes(search.toLowerCase()) ||
+      (item.subValue && item.subValue.toLowerCase().includes(search.toLowerCase()))
+    )
+  })).filter(cat => cat.items.length > 0);
+
   return (
-    <div className="w-full text-xs text-gray-300 space-y-4">
-      {/* Contatos - Compacto em Linha Única ou Coluna Curta */}
-      <section className="border-t border-gray-700 pt-2">
-        <h3 className="font-bold text-green-400 mb-1 flex items-center gap-1">
-          📞 TEL Contactos
-        </h3>
-        <div className="grid grid-cols-1 gap-1 text-[11px]">
-          <p><span className="opacity-70">Portway:</span> VHF 131.875</p>
-          <p><span className="opacity-70">Portway:</span> 📞 289559405</p>
-          <p><span className="opacity-70">Aeroporto:</span> 📞 289800800</p>
-          <p><span className="opacity-70">FAO Safety:</span> 131.450</p>
-          <br />
-          <p><span className="opacity-70">Supervisão:</span> 61496 / 62405</p>
-          <p><span className="opacity-70">Coordenação:</span> 62401</p>
-          <p><span className="opacity-70">S. Descanso: </span>61498</p>
-          <p><span className="opacity-70">Lost & Found: </span>62407</p>
-          <p><span className="opacity-70">Mangas: </span>630 + N° Manga</p>
-          <p><span className="opacity-70">Porta 322: </span> 61303</p>
-          <p><span className="opacity-70">Portas remoto: </span> 638 + N° porta</p>
-          <span>Email: supervisaopaxfao@portway.pt</span>
-          <p><span className="opacity-70">Suporte:</span> 62428</p>
-          <span>Email: Opssupport.fao@portway.pt</span>
-          <p><span className="opacity-70">MyWay: </span> 63373 / 61742</p>
-          <p><span className="opacity-70">PSP: </span> 62688</p>
-          <br />
-          <p><span className="opacity-70">Sala de descanso:</span> 61498</p>
-          <p><span className="opacity-70">Lost:</span> 61498</p>
-          <p><span className="opacity-70">Tapete PART:</span> 61424</p>
-          <p><span className="opacity-70">SOA:</span> 62613</p>
-          <p><span className="opacity-70">Carga:</span> 62625</p>
-          <p><span className="opacity-70">Check-in:</span> 636+N°</p>
-          <p><span className="opacity-70">Recursos Humanos:</span> 62410</p>
-          <p><span className="opacity-70">Balcão:</span> 62406 / 62885</p>
-          <br />
-          <br />
-          <p><span className="opacity-70">GoPads:</span> Ptw.fao.f4s | 654321</p>
-          <p><span className="opacity-70">GoPadsGate:</span> Ptw | 123456</p>
-          <p><span className="opacity-70">MyWayAPP:</span> Ptw.fao | portway01</p>
-          <br />
-          <p><span className="opacity-70">CKIN: </span> 636 + N° CKIN</p>
-          <p><span className="opacity-70">RH: </span> 62410</p>
-          <p><span className="opacity-70">Balcão: </span> 62406 / 62885</p>
-          <p><span className="opacity-70">C. Incidências: </span> 62002</p>
-          <p><span className="opacity-70">Tapete PART: </span> 61424</p>
-          <p><span className="opacity-70">SOA: </span> 62613</p>
-          <br />
-          <p><span className="opacity-70">MyWay: </span> 63373 / 61742</p>
-        </div>
-      </section>
-    </div>
+    <Box sx={{ w: '100%', color: '#f8fafc', p: 1 }}>
+      {/* Campo de Busca Rápida */}
+      <Box sx={{ mb: 3 }}>
+        <TextField
+          fullWidth
+          size="small"
+          placeholder="Pesquisar contacto, extensão, e-mail ou sistema..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: '#64748b' }} />
+                </InputAdornment>
+              )
+            }
+          }}
+          sx={{
+            bgcolor: '#0f172a',
+            borderRadius: 2,
+            '& .MuiInputBase-input': { color: '#f8fafc', fontSize: '0.875rem' },
+            '& .MuiOutlinedInput-notchedOutline': { borderColor: '#334155' },
+            '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#38bdf8' },
+            '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#38bdf8' }
+          }}
+        />
+      </Box>
+
+      {/* Lista de Categorias em Grid */}
+      <Grid container spacing={2.5}>
+        {filteredCategories.map((category, idx) => (
+          <Grid size={{ xs: 12, md: 6 }} key={idx}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                bgcolor: '#1e293b',
+                border: '1px solid #334155',
+                borderRadius: 2.5,
+                height: '100%'
+              }}
+            >
+              {/* Título da Categoria */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                {category.icon}
+                <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: category.color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  {category.title}
+                </Typography>
+              </Box>
+
+              <Divider sx={{ borderColor: '#334155', mb: 1.5 }} />
+
+              {/* Itens */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {category.items.map((item, itemIdx) => (
+                  <Box
+                    key={itemIdx}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      p: 1,
+                      borderRadius: 1.5,
+                      bgcolor: '#0f172a',
+                      border: '1px solid #1e293b',
+                      '&:hover': { borderColor: '#334155' }
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ color: '#94a3b8', fontSize: '0.8125rem', fontWeight: 500 }}>
+                      {item.label}:
+                    </Typography>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: item.type === 'vhf' ? '#38bdf8' : '#f8fafc',
+                          fontFamily: item.type === 'vhf' || item.type === 'cred' ? 'monospace' : 'inherit',
+                          fontWeight: 'bold',
+                          fontSize: '0.8125rem'
+                        }}
+                      >
+                        {item.value}
+                      </Typography>
+
+                      {item.subValue && (
+                        <Chip
+                          label={item.subValue}
+                          size="small"
+                          sx={{
+                            bgcolor: '#334155',
+                            color: '#facc15',
+                            fontSize: '0.7rem',
+                            height: 20,
+                            fontFamily: 'monospace'
+                          }}
+                        />
+                      )}
+
+                      <Tooltip title={copiedValue === item.value ? 'Copiado!' : 'Copiar'}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleCopy(item.value)}
+                          sx={{ color: copiedValue === item.value ? '#34d399' : '#64748b', p: 0.5 }}
+                        >
+                          {copiedValue === item.value ? <CheckIcon fontSize="small" /> : <CopyIcon fontSize="small" />}
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Paper>
+          </Grid>
+        ))}
+      </Grid>
+    </Box>
   );
 };
-
-export default Contacts;

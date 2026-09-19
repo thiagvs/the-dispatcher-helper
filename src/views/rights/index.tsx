@@ -1,4 +1,31 @@
-import React from "react";
+import React, { useState, useMemo } from 'react';
+import {
+  Box,
+  Paper,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  InputAdornment,
+  Chip,
+  Alert,
+  Grid,
+  Stack,
+  IconButton
+} from '@mui/material';
+import {
+  Search as SearchIcon,
+  Wc as WcIcon,
+  WaterDrop as WaterIcon,
+  ElectricBolt as GpuIcon,
+  FlightTakeoff as AirlineIcon,
+  WarningAmber as AlertIcon,
+  Clear as ClearIcon,
+} from '@mui/icons-material';
 
 type Company = {
   icao: string;
@@ -55,59 +82,236 @@ const companies: Company[] = [
   { icao: "WIZZ", iata: "W6", operator: "WIZZ AIR", wc: 0, agua: 0, gpu: 45 },
 ];
 
-const CompaniesRights: React.FC = () => {
+export const CompaniesRights: React.FC = () => {
+  const [search, setSearch] = useState('');
+  const [filterWc, setFilterWc] = useState(false);
+  const [filterAgua, setFilterAgua] = useState(false);
+  const [filterGpu, setFilterGpu] = useState(false);
+
+  // Filtragem dinâmica
+  const filteredCompanies = useMemo(() => {
+    return companies.filter((c) => {
+      const matchesSearch =
+        c.icao.toLowerCase().includes(search.toLowerCase()) ||
+        c.iata.toLowerCase().includes(search.toLowerCase()) ||
+        c.operator.toLowerCase().includes(search.toLowerCase());
+
+      const matchesWc = !filterWc || c.wc > 0;
+      const matchesAgua = !filterAgua || c.agua > 0;
+      const matchesGpu = !filterGpu || c.gpu > 0;
+
+      return matchesSearch && matchesWc && matchesAgua && matchesGpu;
+    });
+  }, [search, filterWc, filterAgua, filterGpu]);
+
+  // Métricas rápidas
+  const stats = useMemo(() => ({
+    total: companies.length,
+    wcCount: companies.filter((c) => c.wc > 0).length,
+    aguaCount: companies.filter((c) => c.agua > 0).length,
+    gpuCount: companies.filter((c) => c.gpu > 0).length,
+  }), []);
+
   return (
-    <div className="max-w-5xl mx-auto p-4 text-sm pb-24">
-      <h2 className="text-xl font-bold text-center mb-4 text-white">
-        SERVIÇOS CONTRATADOS - UPDATE - 17 FEB 2026
-      </h2>
+    <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: 1.5, sm: 3 }, color: '#f8fafc', pb: 10 }}>
+      {/* Cabeçalho */}
+      <Box sx={{ mb: 3, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { md: 'center' }, gap: 2 }}>
+        <Box>
+          <Typography variant="h5" sx={{ fontWeight: 800, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <AirlineIcon sx={{ color: '#38bdf8', fontSize: 30 }} /> Serviços Contratados por Companhia
+          </Typography>
+          <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, letterSpacing: 0.5 }}>
+            ÚLTIMA ATUALIZAÇÃO: 17 FEB 2026
+          </Typography>
+        </Box>
 
-      <div className="overflow-x-auto shadow-lg rounded-lg">
-        <table className="w-full border-collapse bg-gray-800 text-gray-200">
-          <thead>
-            <tr className="bg-gray-700 text-xs uppercase tracking-wider">
-              <th className="border border-gray-600 p-2">ICAO</th>
-              <th className="border border-gray-600 p-2">IATA</th>
-              <th className="border border-gray-600 p-2 text-left">Operator</th>
-              <th className="border border-gray-600 p-2 bg-yellow-600 text-white w-16">WC</th>
-              <th className="border border-gray-600 p-2 bg-blue-600 text-white w-16">Agua</th>
-              <th className="border border-gray-600 p-2 bg-green-600 text-white w-16">GPU</th>
-            </tr>
-          </thead>
+        {/* Badges Estatísticos */}
+        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+          <Chip label={`Total: ${stats.total}`} size="small" sx={{ bgcolor: '#334155', color: '#f8fafc', fontWeight: 'bold' }} />
+          <Chip icon={<WcIcon style={{ color: '#facc15' }} />} label={`WC: ${stats.wcCount}`} size="small" sx={{ bgcolor: 'rgba(250, 204, 21, 0.15)', color: '#facc15', fontWeight: 'bold', border: '1px solid rgba(250, 204, 21, 0.3)' }} />
+          <Chip icon={<WaterIcon style={{ color: '#38bdf8' }} />} label={`Água: ${stats.aguaCount}`} size="small" sx={{ bgcolor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', fontWeight: 'bold', border: '1px solid rgba(56, 189, 248, 0.3)' }} />
+          <Chip icon={<GpuIcon style={{ color: '#34d399' }} />} label={`GPU: ${stats.gpuCount}`} size="small" sx={{ bgcolor: 'rgba(52, 211, 153, 0.15)', color: '#34d399', fontWeight: 'bold', border: '1px solid rgba(52, 211, 153, 0.3)' }} />
+        </Stack>
+      </Box>
 
-          <tbody>
-            {companies.map((c, index) => (
-              <tr
-                key={index}
-                className="text-center hover:bg-gray-700 transition-colors"
-              >
-                <td className="border border-gray-600 p-2 font-mono">{c.icao}</td>
-                <td className="border border-gray-600 p-2 font-mono">{c.iata}</td>
-                <td className="border border-gray-600 p-2 text-left text-xs">{c.operator}</td>
+      {/* Alerta Operacional Relevante */}
+      <Alert
+        icon={<AlertIcon sx={{ color: '#38bdf8' }} />}
+        severity="info"
+        sx={{
+          mb: 3,
+          bgcolor: 'rgba(14, 165, 233, 0.1)',
+          color: '#e0f2fe',
+          border: '1px solid #0284c7',
+          borderRadius: 2,
+          fontWeight: 700,
+          fontSize: '0.8125rem',
+          letterSpacing: '0.5px'
+        }}
+      >
+        NOTA OPERACIONAL: EFETUAR SEMPRE H2O ANTES DO WC
+      </Alert>
 
-                <td className={`border border-gray-600 p-2 font-bold ${c.wc > 0 ? 'bg-yellow-900/40 text-yellow-200' : 'text-gray-500'}`}>
-                  {c.wc}
-                </td>
+      {/* Barra de Pesquisa e Filtros Rápido */}
+      <Paper elevation={0} sx={{ p: 2, bgcolor: '#1e293b', border: '1px solid #334155', borderRadius: 2.5, mb: 3 }}>
+        <Grid container spacing={2} sx={{ alignItems: 'center' }}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Buscar por ICAO, IATA ou Operador (ex: DLH, LH, Lufthansa)..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: '#64748b' }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: search && (
+                    <InputAdornment position="end">
+                      <IconButton size="small" onClick={() => setSearch('')}>
+                        <ClearIcon sx={{ color: '#64748b', fontSize: 18 }} />
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }
+              }}
+              sx={{
+                bgcolor: '#0f172a',
+                borderRadius: 2,
+                '& .MuiInputBase-input': { color: '#f8fafc', fontSize: '0.875rem' },
+                '& .MuiOutlinedInput-notchedOutline': { borderColor: '#334155' },
+                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#38bdf8' },
+                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#38bdf8' }
+              }}
+            />
+          </Grid>
 
-                <td className={`border border-gray-600 p-2 font-bold ${c.agua > 0 ? 'bg-blue-900/40 text-blue-200' : 'text-gray-500'}`}>
-                  {c.agua}
-                </td>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ justifyContent: { xs: 'flex-start', md: 'flex-end' } }}
+            >
+              <Chip
+                label="Apenas WC"
+                onClick={() => setFilterWc(!filterWc)}
+                color={filterWc ? 'warning' : 'default'}
+                variant={filterWc ? 'filled' : 'outlined'}
+                size="small"
+                sx={{ cursor: 'pointer', fontWeight: 600, color: filterWc ? '#000' : '#94a3b8', borderColor: '#475569' }}
+              />
+              <Chip
+                label="Apenas Água"
+                onClick={() => setFilterAgua(!filterAgua)}
+                color={filterAgua ? 'info' : 'default'}
+                variant={filterAgua ? 'filled' : 'outlined'}
+                size="small"
+                sx={{ cursor: 'pointer', fontWeight: 600, color: filterAgua ? '#000' : '#94a3b8', borderColor: '#475569' }}
+              />
+              <Chip
+                label="Com GPU"
+                onClick={() => setFilterGpu(!filterGpu)}
+                color={filterGpu ? 'success' : 'default'}
+                variant={filterGpu ? 'filled' : 'outlined'}
+                size="small"
+                sx={{ cursor: 'pointer', fontWeight: 600, color: filterGpu ? '#000' : '#94a3b8', borderColor: '#475569' }}
+              />
+            </Stack>
+          </Grid>
+        </Grid>
+      </Paper>
 
-                <td className={`border border-gray-600 p-2 font-bold ${c.gpu > 0 ? 'bg-green-900/40 text-green-200' : 'text-gray-500'}`}>
-                  {c.gpu}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Tabela de Dados Refatorada */}
+      <TableContainer component={Paper} elevation={0} sx={{ bgcolor: '#1e293b', border: '1px solid #334155', borderRadius: 2.5, overflow: 'hidden' }}>
+        <Table size="medium">
+          <TableHead>
+            <TableRow sx={{ bgcolor: '#0f172a' }}>
+              <TableCell sx={{ color: '#94a3b8', fontWeight: 800, fontSize: '0.75rem', borderBottom: '1px solid #334155' }}>ICAO</TableCell>
+              <TableCell sx={{ color: '#94a3b8', fontWeight: 800, fontSize: '0.75rem', borderBottom: '1px solid #334155' }}>IATA</TableCell>
+              <TableCell sx={{ color: '#94a3b8', fontWeight: 800, fontSize: '0.75rem', borderBottom: '1px solid #334155' }}>OPERADOR</TableCell>
+              <TableCell align="center" sx={{ color: '#facc15', fontWeight: 800, fontSize: '0.75rem', borderBottom: '1px solid #334155', bgcolor: 'rgba(250, 204, 21, 0.05)' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                  <WcIcon fontSize="small" /> WC
+                </Box>
+              </TableCell>
+              <TableCell align="center" sx={{ color: '#38bdf8', fontWeight: 800, fontSize: '0.75rem', borderBottom: '1px solid #334155', bgcolor: 'rgba(56, 189, 248, 0.05)' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                  <WaterIcon fontSize="small" /> ÁGUA
+                </Box>
+              </TableCell>
+              <TableCell align="center" sx={{ color: '#34d399', fontWeight: 800, fontSize: '0.75rem', borderBottom: '1px solid #334155', bgcolor: 'rgba(52, 211, 153, 0.05)' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                  <GpuIcon fontSize="small" /> GPU
+                </Box>
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredCompanies.length > 0 ? (
+              filteredCompanies.map((c, idx) => (
+                <TableRow
+                  key={idx}
+                  sx={{
+                    '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.03)' },
+                    '&:last-child td, &:last-child th': { border: 0 }
+                  }}
+                >
+                  <TableCell sx={{ color: '#38bdf8', fontFamily: 'monospace', fontWeight: 700, borderColor: '#334155' }}>
+                    {c.icao}
+                  </TableCell>
+                  <TableCell sx={{ color: '#cbd5e1', fontFamily: 'monospace', fontWeight: 700, borderColor: '#334155' }}>
+                    {c.iata}
+                  </TableCell>
+                  <TableCell sx={{ color: '#f8fafc', fontWeight: 600, fontSize: '0.8125rem', borderColor: '#334155' }}>
+                    {c.operator}
+                  </TableCell>
 
-      <div className="mt-6 p-3 bg-blue-900/30 border border-blue-500 rounded text-center">
-        <p className="text-blue-200 font-bold uppercase tracking-widest text-xs">
-          NOTA: EFETUAR SEMPRE H2O ANTES DO WC
-        </p>
-      </div>
-    </div>
+                  {/* WC Status */}
+                  <TableCell align="center" sx={{ borderColor: '#334155', bgcolor: 'rgba(250, 204, 21, 0.02)' }}>
+                    {c.wc > 0 ? (
+                      <Chip label="INCLUÍDO" size="small" sx={{ bgcolor: 'rgba(250, 204, 21, 0.15)', color: '#facc15', fontWeight: 800, fontSize: '0.7rem' }} />
+                    ) : (
+                      <Typography variant="caption" sx={{ color: '#475569', fontWeight: 600 }}>—</Typography>
+                    )}
+                  </TableCell>
+
+                  {/* Água Status */}
+                  <TableCell align="center" sx={{ borderColor: '#334155', bgcolor: 'rgba(56, 189, 248, 0.02)' }}>
+                    {c.agua > 0 ? (
+                      <Chip label="INCLUÍDO" size="small" sx={{ bgcolor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', fontWeight: 800, fontSize: '0.7rem' }} />
+                    ) : (
+                      <Typography variant="caption" sx={{ color: '#475569', fontWeight: 600 }}>—</Typography>
+                    )}
+                  </TableCell>
+
+                  {/* GPU Status (Minutos ou Não Incluído) */}
+                  <TableCell align="center" sx={{ borderColor: '#334155', bgcolor: 'rgba(52, 211, 153, 0.02)' }}>
+                    {c.gpu > 0 ? (
+                      <Chip
+                        label={`${c.gpu} MIN`}
+                        size="small"
+                        sx={{ bgcolor: 'rgba(52, 211, 153, 0.15)', color: '#34d399', fontWeight: 800, fontSize: '0.7rem', fontFamily: 'monospace' }}
+                      />
+                    ) : (
+                      <Typography variant="caption" sx={{ color: '#475569', fontWeight: 600 }}>—</Typography>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} align="center" sx={{ py: 6, color: '#64748b', borderColor: '#334155' }}>
+                  Nenhuma companhia encontrada com os termos/filtros aplicados.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
   );
 };
 

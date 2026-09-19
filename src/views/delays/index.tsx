@@ -1,4 +1,25 @@
-import  { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
+import {
+    Box,
+    Paper,
+    Typography,
+    TextField,
+    InputAdornment,
+    Chip,
+    Stack,
+    IconButton,
+    Tabs,
+    Tab,
+    Divider
+} from '@mui/material';
+import {
+    Search as SearchIcon,
+    Clear as ClearIcon,
+    Timer as DelayIcon,
+    Public as IataIcon,
+    LocalAirport as EasyJetIcon,
+    SearchOff as SearchOffIcon
+} from '@mui/icons-material';
 
 interface DelayCode {
     code: string;
@@ -14,7 +35,7 @@ interface DelayCategory {
     items: DelayCode[];
 }
 
-export default function Delays() {
+export const Delays: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'iata' | 'easyjet'>('iata');
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -23,7 +44,7 @@ export default function Delays() {
         {
             title: "Códigos Internos da Linha Aérea",
             icon: "🏢",
-            color: "border-zinc-700 text-zinc-400",
+            color: "#94a3b8",
             items: [
                 { code: "00-05", phrase: "L/A", description: "Códigos internos privativos da própria companhia aérea" },
                 { code: "06", subCode: "OA", phrase: "FALTA DE PORTÃO", description: "Indisponibilidade de portão ou posição de parada devido a atividades da própria linha aérea" },
@@ -33,7 +54,7 @@ export default function Delays() {
         {
             title: "Passageiros e Bagagem",
             icon: "🧳",
-            color: "border-blue-500 text-blue-400",
+            color: "#60a5fa",
             items: [
                 { code: "11", subCode: "PD", phrase: "CHECK-IN TARDIO", description: "Check-in tardio, aceitação de passageiros após o encerramento do horário limite" },
                 { code: "12", subCode: "PL", phrase: "CONGESTIONAMENTO", description: "Check-in tardio devido a congestionamento na área de atendimento" },
@@ -49,7 +70,7 @@ export default function Delays() {
         {
             title: "Carga e Correio",
             icon: "📦",
-            color: "border-amber-600 text-amber-500",
+            color: "#f59e0b",
             items: [
                 { code: "21", subCode: "CD", phrase: "DOC DE CARGA", description: "Erros de documentação, manifestos de carga ou trâmites fiscais" },
                 { code: "22", subCode: "CP", phrase: "POSICIONAMENTO", description: "Posicionamento tardio da carga na rampa para o carregamento" },
@@ -65,7 +86,7 @@ export default function Delays() {
         {
             title: "Aeronave e Atendimento de Rampa (Ground Handling)",
             icon: "🚜",
-            color: "border-purple-500 text-purple-400",
+            color: "#c084fc",
             items: [
                 { code: "31", subCode: "GD", phrase: "DOC DA AERONAVE", description: "Atraso ou incorreção na papelada do voo: peso e balanceamento (Loadsheet), declaração geral, manifesto de pax, etc." },
                 { code: "32", subCode: "GL", phrase: "CARREGAMENTO", description: "Problemas no carregamento/descarregamento, carga volumosa, cargas especiais, malas na cabine ou falta de operadores na rampa" },
@@ -81,7 +102,7 @@ export default function Delays() {
         {
             title: "Manutenção e Equipamento Técnico",
             icon: "🔧",
-            color: "border-red-500 text-red-400",
+            color: "#f87171",
             items: [
                 { code: "41", subCode: "TD", phrase: "DEFEITOS TÉCNICOS", description: "Pane ou defeitos identificados na aeronave que necessitam de intervenção mecânica" },
                 { code: "42", subCode: "TM", phrase: "MANUT. PROGRAMADA", description: "Liberação tardia da aeronave que estava em manutenção de rotina ou programada" },
@@ -96,36 +117,36 @@ export default function Delays() {
         {
             title: "Danos à Aeronave e Sistemas de TI",
             icon: "💻",
-            color: "border-teal-500 text-teal-400",
+            color: "#2dd4bf",
             items: [
                 { code: "51", subCode: "DF", phrase: "DANOS EM OPERAÇÃO", description: "Danos sofridos em voo/táxi: colisão com pássaros (bird strike), raio, turbulência extrema, pouso duro ou colisão taxiando" },
                 { code: "52", subCode: "DG", phrase: "DANOS EM SOLO", description: "Danos em solo: colisão por veículos da rampa, avarias no carregamento, contaminação de fluidos ou clima extremo" },
                 { code: "55", subCode: "ED", phrase: "SISTEMA DE CHECK-IN", description: "Falha de TI nos sistemas automatizados de controle de partida (DCS), check-in ou portão de embarque" },
                 { code: "56", subCode: "EC", phrase: "SISTEMA DE CARGA", description: "Falha de TI nos softwares automatizados de manifesto ou pesagem de carga" },
                 { code: "57", subCode: "EF", phrase: "SISTEMA DE PLANOS", description: "Falhas em sistemas de computador voltados para o processamento de Planos de Voo" },
-                { code: "58", subCode: "EO", description: "Outras panes, bugs ou indisponibilidade em sistemas de computadores gerais da base", phrase: "OUTROS SISTEMAS" }
+                { code: "58", subCode: "EO", phrase: "OUTROS SISTEMAS", description: "Outras panes, bugs ou indisponibilidade em sistemas de computadores gerais da base" }
             ]
         },
         {
             title: "Operações de Voo e Tripulação",
             icon: "🧑‍✈️",
-            color: "border-indigo-500 text-indigo-400",
+            color: "#818cf8",
             items: [
-                { code: "61", phrase: "DOC DE VOO", subCode: "FP", description: "Conclusão tardia, conferência ou alterações de última hora na documentação ou planos de voo" },
-                { code: "62", phrase: "ALTERAÇÃO OPERACIONAL", subCode: "FF", description: "Mudanças operacionais tardias: reajuste de combustível por autonomia ou alteração drástica de carga limite" },
-                { code: "63", phrase: "EMBARQUE DE TRIPUL.", subCode: "FT", description: "Procedimentos de partida ou embarque tardio da tripulação inteira (exceto conexões ou tripulação reserva)" },
-                { code: "64", phrase: "FALTA DE PILOTOS", subCode: "FS", description: "Falta de pilotos/co-pilotos por motivo de doença, limites de jornada estourados, alimentação ou problemas de visto/vacina" },
-                { code: "65", phrase: "SOLICITAÇÃO PILOTO", subCode: "FR", description: "Pedidos especiais ou checagens extras da tripulação técnica fora dos requisitos operacionais padrão" },
-                { code: "66", phrase: "EMBARQUE COMISSÁRIOS", subCode: "FL", description: "Embarque tardio ou procedimentos operacionais atrasados da tripulação de cabine (comissários)" },
-                { code: "67", phrase: "FALTA DE COMISSÁRIOS", subCode: "FC", description: "Falta de comissários por licença médica, estouro de jornada regulamentar, refeições ou atraso em exames" },
-                { code: "68", phrase: "ERRO DE CABINE", subCode: "FA", description: "Erros operacionais internos ou solicitações especiais da equipe de comissários fora do padrão" },
-                { code: "69", phrase: "REVISTA DE SEGURANÇA", subCode: "FB", description: "Solicitação extraordinária do Comandante para realização de vistoria ou checagem extra de segurança na aeronave" }
+                { code: "61", subCode: "FP", phrase: "DOC DE VOO", description: "Conclusão tardia, conferência ou alterações de última hora na documentação ou planos de voo" },
+                { code: "62", subCode: "FF", phrase: "ALTERAÇÃO OPERACIONAL", description: "Mudanças operacionais tardias: reajuste de combustível por autonomia ou alteração drástica de carga limite" },
+                { code: "63", subCode: "FT", phrase: "EMBARQUE DE TRIPUL.", description: "Procedimentos de partida ou embarque tardio da tripulação inteira (exceto conexões ou tripulação reserva)" },
+                { code: "64", subCode: "FS", phrase: "FALTA DE PILOTOS", description: "Falta de pilotos/co-pilotos por motivo de doença, limites de jornada estourados, alimentação ou problemas de visto/vacina" },
+                { code: "65", subCode: "FR", phrase: "SOLICITAÇÃO PILOTO", description: "Pedidos especiais ou checagens extras da tripulação técnica fora dos requisitos operacionais padrão" },
+                { code: "66", subCode: "FL", phrase: "EMBARQUE COMISSÁRIOS", description: "Embarque tardio ou procedimentos operacionais atrasados da tripulação de cabine (comissários)" },
+                { code: "67", subCode: "FC", phrase: "FALTA DE COMISSÁRIOS", description: "Falta de comissários por licença médica, estouro de jornada regulamentar, refeições ou atraso em exames" },
+                { code: "68", subCode: "FA", phrase: "ERRO DE CABINE", description: "Erros operacionais internos ou solicitações especiais da equipe de comissários fora do padrão" },
+                { code: "69", subCode: "FB", phrase: "REVISTA DE SEGURANÇA", description: "Solicitação extraordinária do Comandante para realização de vistoria ou checagem extra de segurança na aeronave" }
             ]
         },
         {
             title: "Condições Meteorológicas (Weather)",
             icon: "⛈️",
-            color: "border-sky-500 text-sky-400",
+            color: "#38bdf8",
             items: [
                 { code: "71", subCode: "WO", phrase: "METEO DE ORIGEM", description: "Condições meteorológicas adversas operando abaixo dos mínimos na estação de partida" },
                 { code: "72", subCode: "WT", phrase: "METEO DE DESTINO", description: "Condições climáticas fechadas ou abaixo dos mínimos na base de destino pretendida" },
@@ -138,15 +159,15 @@ export default function Delays() {
         {
             title: "ATFM, Aeroportos e Autoridades Governamentais",
             icon: "🛂",
-            color: "border-emerald-500 text-emerald-400",
+            color: "#34d399",
             items: [
                 { code: "81", subCode: "AT", phrase: "ATC EM ROTA", description: "Restrições de fluxo de tráfego aéreo (ATFM) devido a problemas de excesso de demanda ou capacidade do controle de rota" },
                 { code: "82", subCode: "AX", phrase: "GREVE / APAGÃO ATC", description: "Restrições de ATFM decorrentes de greve de controladores, falta de pessoal, falha de radar ou exercícios militares na área" },
                 { code: "83", subCode: "AE", phrase: "RESTRIÇÃO NO DESTINO", description: "Restrições de ATFM por fechamento de pista no destino (obstruções, greves locais, toque de recolher noturno ou ruído)" },
-                { code: "84", subCode: "AW", phrase: "METEO ATC NO DESTINO", description: "Restrições de fluxo applied pelo controle de tráfego aéreo devido ao mau tempo severo na área de destino" },
+                { code: "84", subCode: "AW", phrase: "METEO ATC NO DESTINO", description: "Restrições de fluxo aplicadas pelo controle de tráfego aéreo devido ao mau tempo severo na área de destino" },
                 { code: "85", subCode: "AS", phrase: "SEGURANÇA OBRIGATÓRIA", description: "Inspeções, quebras de protocolos ou exigências de segurança de caráter mandatório pelas autoridades" },
                 { code: "86", subCode: "AG", phrase: "ALFÂNDEGA / SAÚDE", description: "Atrasos causados por trâmites lentos ou vistorias de órgãos como Imigração, Alfândega, Receita Federal ou Vigilância Sanitária" },
-                { code: "87", subCode: "AF", phrase: "INFRAESTRUTURA", description: "Problemas do aeroporto: falta de posições de estacionamento (stands), congestionamento geral na rampa ou panes nas pontes (pontes de embarque)" },
+                { code: "87", subCode: "AF", phrase: "INFRAESTRUTURA", description: "Problemas do aeroporto: falta de posições de estacionamento (stands), congestionamento geral na rampa ou panes nas pontes de embarque" },
                 { code: "88", subCode: "AD", phrase: "RESTRIÇÃO NA ORIGEM", description: "Restrições na base de partida (fechamento de pista por incidentes, panes no serviço de tráfego de solo, pushback suspenso pelo aeroporto, etc.)" },
                 { code: "89", subCode: "AM", phrase: "OUTRAS AUTORIDADES", description: "Restrições diversas emanadas por órgãos de regulação ou gerenciamento de fluxo aéreo geral" }
             ]
@@ -154,20 +175,20 @@ export default function Delays() {
         {
             title: "Atrasos Reacionários (Efeito Cascata)",
             icon: "🔄",
-            color: "border-pink-500 text-pink-400",
+            color: "#f472b6",
             items: [
                 { code: "91", subCode: "RL", phrase: "CONEXÃO DE CARGA", description: "Aeronave retida aguardando a chegada ou transferência de carga e correio vindo de outro voo conectado" },
                 { code: "92", subCode: "RT", phrase: "CONEXÃO DE PAX", description: "Erro ou lentidão na transferência de malas ou passageiros em trânsito com conexões apertadas (Through Check-In)" },
                 { code: "93", subCode: "RA", phrase: "ROTAÇÃO DE AERONAVE", description: "Chegada tardia da aeronave cumprindo o trecho anterior da malha de voos (Atraso reacionário padrão)" },
                 { code: "94", subCode: "RS", phrase: "ROTAÇÃO DE COMISSÁRIOS", description: "Aguardando a chegada de comissários de bordo que estão conectando vindos de outra aeronave atrasada" },
-                { code: "95", subCode: "RC", phrase: "ROTAÇÃO DE PILOTOS", description: "Aguardando a chegada de pilotos (Crew Deck) ou da tripulação completa vindos de outro voo in trânsito" },
+                { code: "95", subCode: "RC", phrase: "ROTAÇÃO DE PILOTOS", description: "Aguardando a chegada de pilotos (Crew Deck) ou da tripulação completa vindos de outro voo em trânsito" },
                 { code: "96", subCode: "RO", phrase: "CONTROLE OPERACIONAL", description: "Decisões do Centro de Controle (CCO): alteração de rotas por conveniência, voos alternados, consolidação de voos ou troca por motivos comerciais" }
             ]
         },
         {
             title: "Códigos Diversos (Miscellaneous)",
             icon: "⚠️",
-            color: "border-rose-600 text-rose-500",
+            color: "#f43f5e",
             items: [
                 { code: "97", subCode: "MI", phrase: "GREVE DA COMPANHIA", description: "Paralisações trabalhistas ou greves organizadas pelos funcionários da própria linha aérea" },
                 { code: "98", subCode: "MO", phrase: "GREVE EXTERNA", description: "Paralisações externas de prestadores de serviços de rampa ou aeroportuários (exclui controladores de tráfego)" },
@@ -176,12 +197,12 @@ export default function Delays() {
         }
     ], []);
 
-    // 2. BANCO DE DADOS: CODES ESPECÍFICOS DA EASYJET (De acordo com image_454cdb.jpg)
+    // 2. BANCO DE DADOS: ESPECÍFICO EASYJET
     const easyjetCategories: DelayCategory[] = useMemo(() => [
         {
             title: "Códigos Operacionais Estação easyJet",
             icon: "🟠",
-            color: "border-orange-500 text-orange-400",
+            color: "#fb923c",
             items: [
                 { code: "35", phrase: "LIMPEZA EXTERNA", description: "Limpeza externa da aeronave (External cleaning)" },
                 { code: "36", phrase: "COMBUSTÍVEL", description: "Atrasos relacionados a abastecimento ou reabastecimento de combustível (Fuel)" },
@@ -202,7 +223,7 @@ export default function Delays() {
         }
     ], []);
 
-    // 3. MOTOR DE BUSCA DINÂMICO INTELIGENTE
+    // 3. FILTRAGEM DINÂMICA
     const filteredCategories = useMemo(() => {
         const currentCategories = activeTab === 'iata' ? iataCategories : easyjetCategories;
         if (!searchTerm.trim()) return currentCategories;
@@ -221,127 +242,210 @@ export default function Delays() {
             .filter(category => category.items.length > 0);
     }, [searchTerm, activeTab, iataCategories, easyjetCategories]);
 
+    const activeColor = activeTab === 'easyjet' ? '#f97316' : '#a855f7';
+
     return (
-        <div className="min-h-screen bg-[#0f172a] text-zinc-100 font-sans pb-28">
-            {/* Header da Página */}
-            <div className="p-6 border-b border-zinc-800 text-center max-w-4xl mx-auto">
-                <h2 className="text-3xl font-extrabold text-white tracking-wide flex items-center justify-center gap-2">
-                    Central de códigos de atraso
-                </h2>
-                <p className="text-zinc-400 text-sm mt-1">Interpretação ágil de irregularidades para o gerenciamento de turnos</p>
-            </div>
+        <Box sx={{ maxWidth: 1000, mx: 'auto', p: { xs: 1.5, sm: 3 }, color: '#f8fafc', pb: 10 }}>
+            {/* Cabeçalho */}
+            <Box sx={{ mb: 3, textAlign: 'center' }}>
+                <Typography variant="h5" sx={{ fontWeight: 800, color: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5 }}>
+                    <DelayIcon sx={{ color: activeColor, fontSize: 32 }} /> Central de Códigos de Atraso
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#94a3b8', mt: 0.5 }}>
+                    Interpretação ágil de irregularidades para o gerenciamento de turnos e rampa
+                </Typography>
+            </Box>
 
-            {/* SELETOR DE ABAS (TABS) ERGONÔMICO */}
-            <div className="max-w-md mx-auto px-4 mt-4 flex bg-zinc-900 p-1.5 rounded-2xl border border-zinc-800 shadow-inner">
-                <button
-                    onClick={() => { setActiveTab('iata'); setSearchTerm(''); }}
-                    className={`flex-1 py-2.5 text-xs md:text-sm font-bold rounded-xl transition-all tracking-wider uppercase ${activeTab === 'iata'
-                            ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/30'
-                            : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
-                        }`}
+            {/* Seletor de Abas (IATA vs easyJet) */}
+            <Paper elevation={0} sx={{ bgcolor: '#1e293b', border: '1px solid #334155', borderRadius: 3, p: 0.5, maxWidth: 450, mx: 'auto', mb: 3 }}>
+                <Tabs
+                    value={activeTab}
+                    onChange={(_, val) => { setActiveTab(val); setSearchTerm(''); }}
+                    variant="fullWidth"
+                    slotProps={{ indicator: { style: { backgroundColor: activeColor, height: 3, borderRadius: 3 } } }}
+                    sx={{
+                        minHeight: 44,
+                        '& .MuiTab-root': { color: '#94a3b8', fontWeight: 700, fontSize: '0.8125rem', textTransform: 'uppercase', minHeight: 44, borderRadius: 2 },
+                        '& .Mui-selected': { color: '#f8fafc !important' }
+                    }}
                 >
-                    🌐 IATA Padrão
-                </button>
-                <button
-                    onClick={() => { setActiveTab('easyjet'); setSearchTerm(''); }}
-                    className={`flex-1 py-2.5 text-xs md:text-sm font-bold rounded-xl transition-all tracking-wider uppercase ${activeTab === 'easyjet'
-                            ? 'bg-orange-500 text-white shadow-lg shadow-orange-900/30'
-                            : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
-                        }`}
-                >
-                    🟠 easyJet Codes
-                </button>
-            </div>
+                    <Tab icon={<IataIcon fontSize="small" />} iconPosition="start" label="IATA Padrão" value="iata" />
+                    <Tab icon={<EasyJetIcon fontSize="small" />} iconPosition="start" label="easyJet Codes" value="easyjet" />
+                </Tabs>
+            </Paper>
 
-            {/* INPUT DE BUSCA AMPLO, PROMINENTE E ADAPTADO */}
-            <div className="p-4 max-w-3xl mx-auto w-full px-4 mt-3">
-                <div className="relative shadow-2xl rounded-2xl">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 text-xl pointer-events-none">
-                        🔍
-                    </span>
-
-                    <input
-                        type="text"
-                        placeholder={
-                            activeTab === 'iata'
-                                ? "Buscar código IATA, sigla ou palavra-chave (ex: 93, PB, clima)..."
-                                : "Buscar código easyJet ou palavra-chave (ex: 55, ERES, slot)..."
+            {/* Campo de Busca */}
+            <Paper elevation={0} sx={{ p: 1.5, bgcolor: '#1e293b', border: `1px solid ${searchTerm ? activeColor : '#334155'}`, borderRadius: 3, mb: 3, transition: 'border-color 0.2s' }}>
+                <TextField
+                    fullWidth
+                    size="medium"
+                    placeholder={
+                        activeTab === 'iata'
+                            ? "Buscar código IATA, subcódigo ou palavra-chave (ex: 93, PB, clima)..."
+                            : "Buscar código easyJet ou palavra-chave (ex: 55, ERES, slot)..."
+                    }
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    slotProps={{
+                        input: {
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon sx={{ color: activeColor }} />
+                                </InputAdornment>
+                            ),
+                            endAdornment: searchTerm && (
+                                <InputAdornment position="end">
+                                    <IconButton size="small" onClick={() => setSearchTerm('')}>
+                                        <ClearIcon sx={{ color: '#64748b', fontSize: 18 }} />
+                                    </IconButton>
+                                </InputAdornment>
+                            )
                         }
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className={`w-full bg-zinc-900 border-2 rounded-2xl py-4 pl-12 pr-24 text-white focus:outline-none focus:ring-2 focus:border-transparent placeholder-zinc-500 transition-all text-base md:text-lg font-medium tracking-wide ${activeTab === 'easyjet' ? 'border-orange-600/50 focus:ring-orange-500' : 'border-zinc-700/80 focus:ring-purple-500'
-                            }`}
-                    />
+                    }}
+                    sx={{
+                        '& .MuiInputBase-input': { color: '#f8fafc', fontSize: '0.95rem', fontWeight: 500 },
+                        '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
+                    }}
+                />
+            </Paper>
 
-                    {searchTerm && (
-                        <button
-                            onClick={() => setSearchTerm('')}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-300 hover:text-white font-bold text-xs bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded-xl transition border border-zinc-700"
-                        >
-                            LIMPAR
-                        </button>
-                    )}
-                </div>
-            </div>
-
-            {/* Grid de Exibição das Categorias */}
-            <div className="max-w-4xl mx-auto px-4 mt-2 space-y-6">
-                {filteredCategories.length === 0 ? (
-                    <div className="text-center py-12 text-zinc-500 text-sm">
-                        Nenhum código localizado para "{searchTerm}" nesta companhia.
-                    </div>
-                ) : (
+            {/* Lista de Categorias e Códigos */}
+            <Stack spacing={3}>
+                {filteredCategories.length > 0 ? (
                     filteredCategories.map((category, catIdx) => (
-                        <div key={catIdx} className="bg-zinc-900/60 rounded-2xl border border-zinc-800/80 overflow-hidden shadow-xl">
+                        <Paper
+                            key={catIdx}
+                            elevation={0}
+                            sx={{
+                                bgcolor: '#1e293b',
+                                border: '1px solid #334155',
+                                borderRadius: 3,
+                                overflow: 'hidden'
+                            }}
+                        >
+                            {/* Cabeçalho da Categoria */}
+                            <Box
+                                sx={{
+                                    px: 2.5,
+                                    py: 1.5,
+                                    bgcolor: '#0f172a',
+                                    borderBottom: '1px solid #334155',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1.5
+                                }}
+                            >
+                                <Typography variant="h6" component="span" sx={{ fontSize: '1.25rem' }}>
+                                    {category.icon}
+                                </Typography>
+                                <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#f8fafc', fontSize: '0.95rem' }}>
+                                    {category.title}
+                                </Typography>
+                                <Chip
+                                    label={`${category.items.length} ${category.items.length === 1 ? 'item' : 'itens'}`}
+                                    size="small"
+                                    sx={{
+                                        ml: 'auto',
+                                        bgcolor: '#334155',
+                                        color: '#cbd5e1',
+                                        fontWeight: 700,
+                                        fontSize: '0.7rem',
+                                        fontFamily: 'monospace'
+                                    }}
+                                />
+                            </Box>
 
-                            {/* Cabeçalho do Card */}
-                            <div className="bg-zinc-900 px-5 py-3 border-b border-zinc-800 flex items-center gap-3">
-                                <span className="text-xl">{category.icon}</span>
-                                <h2 className="font-bold text-white tracking-wide text-sm md:text-base">{category.title}</h2>
-                                <span className="ml-auto text-xs bg-zinc-800 text-zinc-400 font-mono px-2 py-0.5 rounded">
-                                    {category.items.length} {category.items.length === 1 ? 'item' : 'itens'}
-                                </span>
-                            </div>
-
-                            {/* Linhas de Códigos */}
-                            <div className="divide-y divide-zinc-800/50">
+                            {/* Itens do Código */}
+                            <Stack divider={<Divider sx={{ borderColor: 'rgba(51, 65, 85, 0.5)' }} />}>
                                 {category.items.map((item, itemIdx) => (
-                                    <div key={itemIdx} className="p-4 flex flex-col md:flex-row items-start md:items-center gap-3 hover:bg-zinc-800/20 transition">
+                                    <Box
+                                        key={itemIdx}
+                                        sx={{
+                                            p: 2,
+                                            display: 'flex',
+                                            flexDirection: { xs: 'column', sm: 'row' },
+                                            alignItems: { xs: 'flex-start', sm: 'center' },
+                                            gap: 2,
+                                            '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.02)' }
+                                        }}
+                                    >
+                                        {/* Bloco dos Badges (Código Principal + Subcódigo) */}
+                                        <Stack direction="row" spacing={1} sx={{ minWidth: 140, flexShrink: 0, alignItems: 'center' }}>
+                                            <Box
+                                                sx={{
+                                                    fontFamily: 'monospace',
+                                                    fontWeight: 900,
+                                                    fontSize: '1rem',
+                                                    px: 1.5,
+                                                    py: 0.5,
+                                                    borderRadius: 1.5,
+                                                    textAlign: 'center',
+                                                    minWidth: 64,
+                                                    bgcolor: activeTab === 'easyjet' ? 'rgba(249, 115, 22, 0.15)' : 'rgba(168, 85, 247, 0.15)',
+                                                    color: activeTab === 'easyjet' ? '#fb923c' : '#c084fc',
+                                                    border: `1px solid ${activeTab === 'easyjet' ? 'rgba(249, 115, 22, 0.3)' : 'rgba(168, 85, 247, 0.3)'}`
+                                                }}
+                                            >
+                                                {item.code}
+                                            </Box>
 
-                                        {/* Badge do Código */}
-                                        <div className="flex items-center gap-2 shrink-0 w-full md:w-32">
-                                            <span className={`font-mono font-black text-lg border px-2 py-0.5 rounded-lg w-20 text-center ${activeTab === 'easyjet'
-                                                    ? 'text-orange-400 bg-orange-950/30 border-orange-800/40'
-                                                    : 'text-purple-400 bg-purple-950/40 border-purple-800/50'
-                                                }`}>
-                                                <b>{item.code}</b>
-                                            </span>
                                             {item.subCode && (
-                                                <span className="font-sans font-bold text-xs bg-zinc-800 text-zinc-300 px-1.5 py-1 rounded tracking-wider border border-zinc-700">
-                                                    <b> - {item.subCode} </b>
-                                                </span>
+                                                <Box
+                                                    sx={{
+                                                        fontFamily: 'monospace',
+                                                        fontWeight: 800,
+                                                        fontSize: '0.75rem',
+                                                        px: 1,
+                                                        py: 0.5,
+                                                        borderRadius: 1,
+                                                        bgcolor: '#0f172a',
+                                                        color: '#94a3b8',
+                                                        border: '1px solid #334155'
+                                                    }}
+                                                >
+                                                    {item.subCode}
+                                                </Box>
                                             )}
-                                        </div>
+                                        </Stack>
 
-                                        {/* Descrição e Significado */}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="text-white text-xs font-bold tracking-wide uppercase flex items-center gap-1.5 mb-0.5">
-                                                <span className={`w-1.5 h-1.5 rounded-full border-2 ${category.color.split(' ')[0]}`} />
+                                        {/* Título Resumido e Descrição Detalhada */}
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography
+                                                variant="caption"
+                                                sx={{
+                                                    fontWeight: 800,
+                                                    color: category.color,
+                                                    display: 'block',
+                                                    letterSpacing: 0.5,
+                                                    textTransform: 'uppercase',
+                                                    mb: 0.25
+                                                }}
+                                            >
                                                 {item.phrase}
-                                            </div>
-                                            <p className="text-zinc-400 text-xs md:text-sm leading-relaxed">
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ color: '#cbd5e1', lineHeight: 1.4, fontSize: '0.85rem' }}>
                                                 {item.description}
-                                            </p>
-                                        </div>
-                                        <br />
-                                    </div>
+                                            </Typography>
+                                        </Box>
+                                    </Box>
                                 ))}
-                            </div>
-
-                        </div>
+                            </Stack>
+                        </Paper>
                     ))
+                ) : (
+                    <Paper elevation={0} sx={{ p: 6, textAlign: 'center', bgcolor: '#1e293b', border: '1px solid #334155', borderRadius: 3 }}>
+                        <SearchOffIcon sx={{ fontSize: 48, color: '#64748b', mb: 1 }} />
+                        <Typography variant="h6" sx={{ color: '#94a3b8', fontWeight: 700 }}>
+                            Nenhum código localizado
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#64748b', mt: 0.5 }}>
+                            Não encontramos resultados para "{searchTerm}" no padrão {activeTab.toUpperCase()}.
+                        </Typography>
+                    </Paper>
                 )}
-            </div>
-        </div>
+            </Stack>
+        </Box>
     );
-}
+};
+
+export default Delays;
