@@ -1,4 +1,21 @@
 import React, { useState, useMemo } from 'react';
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Grid,
+    TextField,
+    Button,
+    IconButton,
+    Typography,
+    Paper,
+} from '@mui/material';
+import {
+    Close as CloseIcon,
+    ContentCopy as CopyIcon,
+    CellTower as LdmIcon
+} from '@mui/icons-material';
 
 interface CargoData {
     company: string;
@@ -14,7 +31,7 @@ interface CargoData {
     h5Pcs?: number;
 }
 
-export default function LdmModal({ cargoData, onClose }: { cargoData: CargoData, onClose: () => void }) {
+export default function LdmModal({ open, cargoData, onClose }: { open: boolean, cargoData: CargoData, onClose: () => void }) {
     const currentDay = String(new Date().getDate()).padStart(2, '0');
 
     const [formData, setFormData] = useState({
@@ -50,7 +67,7 @@ export default function LdmModal({ cargoData, onClose }: { cargoData: CargoData,
             ewStr += `Child ${children}\n`;
             ewStr += `Infant ${infants}\n\n`;
             // Como CargoData só tem os pesos, as unidades ficam ocultas ou prontas para edição manual antes de enviar
-           ewStr += `H1 ${h1Pcs}/${h1}\n`;
+            ewStr += `H1 ${h1Pcs}/${h1}\n`;
             ewStr += `H2 ${h2Pcs}/${h2}\n`;
             ewStr += `H3 ${h3Pcs}/${h3}\n`;
             ewStr += `H4 ${h4Pcs}/${h4}\n`;
@@ -77,88 +94,312 @@ export default function LdmModal({ cargoData, onClose }: { cargoData: CargoData,
         alert('LDM copiado!');
     };
 
+    const getInputSx = (labelColor?: string) => ({
+        bgcolor: '#0f172a',
+        borderRadius: 1,
+        '& .MuiInputBase-input': { color: '#f8fafc' },
+        '& .MuiInputLabel-root': {
+            color: labelColor || '#94a3b8',
+            fontWeight: labelColor ? 'bold' : 'normal',
+            '&.Mui-focused': { color: labelColor || '#38bdf8' },
+            '&.MuiInputLabel-shrink': {
+                bgcolor: '#0f172a', // Mantém o fundo escuro atrás do texto do Label
+                px: 0.75,
+                borderRadius: '4px',
+                transform: 'translate(12px, -9px) scale(0.75)' // Ajuste fino do posicionamento
+            }
+        },
+        '& .MuiOutlinedInput-notchedOutline': { borderColor: '#334155' },
+        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#38bdf8' },
+        '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#38bdf8' }
+    });
+
     return (
-        <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-slate-800 rounded-xl shadow-2xl border border-slate-600 w-full max-w-3xl overflow-hidden flex flex-col">
+        <Dialog
+            open={open}
+            onClose={onClose}
+            maxWidth="md"
+            fullWidth
+            slotProps={{
+                paper: {
+                    sx: {
+                        bgcolor: '#1e293b',
+                        color: '#f8fafc',
+                        borderRadius: 3,
+                        border: '1px solid #334155',
+                        boxShadow: 24,
+                        backgroundImage: 'none'
+                    }
+                }
+            }}
+        >
+            {/* Cabeçalho do Modal */}
+            <DialogTitle
+                sx={{
+                    m: 0,
+                    p: 2.5,
+                    bgcolor: '#0f172a',
+                    borderBottom: '1px solid #334155',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                }}
+            >
+                <Typography variant="h6" sx={{ fontWeight: 800, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <LdmIcon sx={{ color: '#38bdf8' }} /> Transmissão LDM
+                </Typography>
+                <IconButton
+                    aria-label="close"
+                    onClick={onClose}
+                    sx={{
+                        color: '#94a3b8',
+                        '&:hover': { color: '#f8fafc', bgcolor: 'rgba(255, 255, 255, 0.05)' }
+                    }}
+                >
+                    <CloseIcon />
+                </IconButton>
+            </DialogTitle>
 
-                <div className="px-6 py-4 border-b border-slate-700 flex justify-between items-center bg-slate-900">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">📡 Transmissão LDM</h2>
-                    <button onClick={onClose} className="text-slate-400 hover:text-white font-bold text-2xl">&times;</button>
-                </div>
+            {/* Conteúdo do Modal / Formulário */}
+            <DialogContent sx={{ p: 3 }}>
+                <Grid container columnSpacing={2} rowSpacing={3} sx={{ mt: 0.5, mb: 3 }}>
+                    <Grid size={{ xs: 12, sm: 3 }}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            label="Cia"
+                            name="company"
+                            value={formData.company}
+                            onChange={handleInputChange}
+                            slotProps={{ htmlInput: { maxLength: 3 } }}
+                            sx={getInputSx()}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 3 }}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            label="Voo"
+                            name="flightNumber"
+                            value={formData.flightNumber}
+                            onChange={handleInputChange}
+                            sx={getInputSx()}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 3 }}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            label="Dia"
+                            name="day"
+                            value={formData.day}
+                            onChange={handleInputChange}
+                            slotProps={{ htmlInput: { maxLength: 2 } }}
+                            sx={getInputSx()}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 3 }}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            label="Matrícula"
+                            name="registration"
+                            value={formData.registration}
+                            onChange={handleInputChange}
+                            sx={getInputSx()}
+                        />
+                    </Grid>
 
-                <div className="p-6 overflow-y-auto max-h-[75vh]">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-400 uppercase">Cia</label>
-                            <input type="text" name="company" value={formData.company} onChange={handleInputChange} className="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" maxLength={3} />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-400 uppercase">Voo</label>
-                            <input type="text" name="flightNumber" value={formData.flightNumber} onChange={handleInputChange} className="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-400 uppercase">Dia</label>
-                            <input type="text" name="day" value={formData.day} onChange={handleInputChange} className="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" maxLength={2} />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-400 uppercase">Matrícula</label>
-                            <input type="text" name="registration" value={formData.registration} onChange={handleInputChange} className="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-400 uppercase">Capacidade</label>
-                            <input type="text" name="capacity" value={formData.capacity} onChange={handleInputChange} className="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-400 uppercase">Tripulação</label>
-                            <input type="text" name="crew" value={formData.crew} onChange={handleInputChange} className="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-400 uppercase">Destino</label>
-                            <input type="text" name="destination" value={formData.destination} onChange={handleInputChange} className="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" maxLength={3} />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-400 uppercase text-blue-400">Males (M)</label>
-                            <input type="number" name="males" value={formData.males} onChange={handleInputChange} min="0" className="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-400 uppercase text-pink-400">Females (F)</label>
-                            <input type="number" name="females" value={formData.females} onChange={handleInputChange} min="0" className="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-400 uppercase text-yellow-400">Child (CHD)</label>
-                            <input type="number" name="children" value={formData.children} onChange={handleInputChange} min="0" className="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-400 uppercase text-emerald-400">Infant (INF)</label>
-                            <input type="number" name="infants" value={formData.infants} onChange={handleInputChange} min="0" className="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
-                        </div>
+                    <Grid size={{ xs: 12, sm: 3 }}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            label="Capacidade"
+                            name="capacity"
+                            value={formData.capacity}
+                            onChange={handleInputChange}
+                            sx={getInputSx()}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 3 }}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            label="Tripulação"
+                            name="crew"
+                            value={formData.crew}
+                            onChange={handleInputChange}
+                            sx={getInputSx()}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 3 }}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            label="Destino"
+                            name="destination"
+                            value={formData.destination}
+                            onChange={handleInputChange}
+                            slotProps={{ htmlInput: { maxLength: 3 } }}
+                            sx={getInputSx()}
+                        />
+                    </Grid>
 
-                        {/* Novo campo para Bagagem em Trânsito (BT) */}
-                        <div className="space-y-1 md:col-span-4">
-                            <label className="text-xs font-bold text-slate-400 uppercase text-orange-400">Bagagem em Trânsito (BT) - Apenas se houver</label>
-                            <input type="text" name="bt" value={formData.bt} onChange={handleInputChange} placeholder="Ex: 10/150" className="w-full md:w-1/4 bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
-                        </div>
-                    </div>
+                    {/* Passageiros com Cores Destaque */}
+                    <Grid size={{ xs: 12, sm: 3 }}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            type="number"
+                            label="Males (M)"
+                            name="males"
+                            value={formData.males}
+                            onChange={handleInputChange}
+                            slotProps={{ htmlInput: { min: 0 } }}
+                            sx={getInputSx('#38bdf8')}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 3 }}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            type="number"
+                            label="Females (F)"
+                            name="females"
+                            value={formData.females}
+                            onChange={handleInputChange}
+                            slotProps={{ htmlInput: { min: 0 } }}
+                            sx={getInputSx('#f472b6')}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 3 }}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            type="number"
+                            label="Child (CHD)"
+                            name="children"
+                            value={formData.children}
+                            onChange={handleInputChange}
+                            slotProps={{ htmlInput: { min: 0 } }}
+                            sx={getInputSx('#facc15')}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 3 }}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            type="number"
+                            label="Infant (INF)"
+                            name="infants"
+                            value={formData.infants}
+                            onChange={handleInputChange}
+                            slotProps={{ htmlInput: { min: 0 } }}
+                            sx={getInputSx('#34d399')}
+                        />
+                    </Grid>
 
-                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-700 relative">
-                        <h3 className="text-xs font-bold text-slate-500 mb-2 uppercase">Pré-visualização</h3>
-                        <pre className="text-emerald-400 font-mono text-sm md:text-base whitespace-pre-wrap leading-relaxed">
-                            {ldmString}
-                        </pre>
+                    {/* Bagagem em Trânsito (BT) */}
+                    <Grid size={{ xs: 12 }}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            label="Bagagem em Trânsito (BT) - Apenas se houver"
+                            placeholder="Ex: 10/150"
+                            name="bt"
+                            value={formData.bt}
+                            onChange={handleInputChange}
+                            sx={{
+                                ...getInputSx('#fb923c'),
+                                width: { xs: '100%', sm: '50%' }
+                            }}
+                        />
+                    </Grid>
+                </Grid>
 
-                        <button onClick={copyToClipboard} className="absolute top-4 right-4 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-600 transition">
-                            Copiar
-                        </button>
-                    </div>
-                </div>
+                {/* Painel de Pré-visualização do LDM */}
+                <Paper
+                    elevation={0}
+                    sx={{
+                        position: 'relative',
+                        p: 2.5,
+                        bgcolor: '#020617',
+                        borderRadius: 2,
+                        border: '1px solid #334155'
+                    }}
+                >
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            fontWeight: 'bold',
+                            color: '#64748b',
+                            textTransform: 'uppercase',
+                            letterSpacing: '1px',
+                            display: 'block',
+                            mb: 1.5
+                        }}
+                    >
+                        Pré-visualização
+                    </Typography>
 
-                <div className="px-6 py-4 bg-slate-900 border-t border-slate-700 flex justify-end">
-                    <button onClick={onClose} className="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded font-bold transition">
-                        Fechar
-                    </button>
-                </div>
+                    <Typography
+                        component="pre"
+                        sx={{
+                            color: '#34d399',
+                            fontFamily: 'monospace, Consolas, Courier New',
+                            fontSize: { xs: '0.8125rem', sm: '0.875rem' },
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-word',
+                            lineHeight: 1.6,
+                            m: 0
+                        }}
+                    >
+                        {ldmString}
+                    </Typography>
 
-            </div>
-        </div>
+                    <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<CopyIcon />}
+                        onClick={copyToClipboard}
+                        sx={{
+                            position: 'absolute',
+                            top: 16,
+                            right: 16,
+                            bgcolor: '#1e293b',
+                            color: '#cbd5e1',
+                            borderColor: '#475569',
+                            textTransform: 'none',
+                            fontWeight: 'bold',
+                            fontSize: '0.75rem',
+                            '&:hover': {
+                                bgcolor: '#334155',
+                                borderColor: '#94a3b8',
+                                color: '#fff'
+                            }
+                        }}
+                    >
+                        Copiar
+                    </Button>
+                </Paper>
+            </DialogContent>
+
+            {/* Rodapé / Ações */}
+            <DialogActions sx={{ px: 3, py: 2, bgcolor: '#0f172a', borderTop: '1px solid #334155' }}>
+                <Button
+                    onClick={onClose}
+                    variant="contained"
+                    sx={{
+                        bgcolor: '#334155',
+                        color: '#f8fafc',
+                        fontWeight: 'bold',
+                        textTransform: 'none',
+                        '&:hover': { bgcolor: '#475569' }
+                    }}
+                >
+                    Fechar
+                </Button>
+            </DialogActions>
+        </Dialog>
     );
 }

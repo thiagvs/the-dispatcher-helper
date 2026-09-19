@@ -1,6 +1,29 @@
 import { useState } from "react";
 import LdmModal from "../modalLDM";
 import { useLocalStorage } from './../../hooks/useLocalStorage';
+import {
+    Box,
+    Container,
+    Grid,
+    Paper,
+    Typography,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    TextField,
+    Button,
+    Chip,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Stack,
+    Divider,
+    Alert
+} from '@mui/material';
 
 const companies = {
     EZY: {
@@ -759,224 +782,448 @@ export default function Loads() {
     };
 
     return (
-        <>
-            <div className="max-w-4xl mx-auto p-6 font-sans text-slate-800">
-                <div className="grid md:grid-cols-2 gap-8 mb-8">
-                    <div className="space-y-4 bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                        <h3 className="font-bold text-slate-700 uppercase text-sm">Voo & Aeronave</h3>
-                        <select className="w-full p-3 rounded-lg border shadow-sm" value={company} onChange={(e) => { setCompany(e.target.value as any); setAircraft(""); }}>
-                            <option value="">Companhia</option>
-                            {Object.entries(companies).map(([code, c]) => <option key={code} value={code}>{code} - {c.name}</option>)}
-                        </select>
-                        <select className="w-full p-3 rounded-lg border shadow-sm" value={aircraft} disabled={!company} onChange={(e) => setAircraft(e.target.value)}>
-                            <option value="">Aeronave</option>
-                            {company && companies[company].aircrafts.map(a => <option key={a} value={a}>{a}</option>)}
-                        </select>
-                        <div className="grid grid-cols-2 gap-4">
-                            <input type="number" placeholder="Peso Total (Bruto)" className="p-3 rounded-lg border" value={pesoTotal} onChange={(e) => setPesoTotal(e.target.value === "" ? "" : Number(e.target.value))} />
-                            <input type="number" placeholder="Total Bags (pcs)" className="p-3 rounded-lg border" value={totalBags} onChange={(e) => setTotalBags(e.target.value === "" ? "" : Number(e.target.value))} />
-                        </div>
-                        {totalBags !== "" && <p className="text-sm font-bold text-blue-600">Peso Médio: {pesoMedioReal} kg</p>}
-                    </div>
+        <Container maxWidth="lg" sx={{ py: 3 }}>
+            {/* PAINÉIS DE ENTRADA DE DADOS */}
+            <Grid container spacing={3} sx={{ mb: 4 }}>
 
-                    <div className="space-y-4 bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                        <h3 className="font-bold text-slate-700 uppercase text-sm">📦 Cargas Especiais</h3>
-                        <div className="flex gap-2">
-                            <select className="flex-1 p-2 rounded-lg border" value={tempType} onChange={(e) => setTempType(e.target.value as any)}>
-                                <option value="AVIH">AVIH - Animals in Hold</option>
-                                <option value="WCMP">WCMP - Cadeira manual (sem bateria)</option>
-                                <option value="WCBD">WCBD - Cadeira com bateria seca (dry cell)</option>
-                                <option value="WCBW">WCBW - Cadeira com bateria molhada (wet cell)</option>
-                                <option value="WCLB">WCLB - Cadeira com bateria de lítio</option>
-                            </select>
-                            <input type="number" placeholder="kg" className="w-20 p-2 rounded border" value={tempWeight} onChange={(e) => setTempWeight(e.target.value === "" ? "" : Number(e.target.value))} />
-                            <button onClick={handleAddSpecialLoad} className="bg-slate-900 text-white px-3 rounded font-bold">ADD</button>
+                {/* 1. VOO & AERONAVE */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <Paper
+                        elevation={4}
+                        sx={{
+                            p: 3,
+                            bgcolor: '#1e293b',
+                            color: '#f8fafc',
+                            borderRadius: 3,
+                            border: '1px solid #334155'
+                        }}
+                    >
+                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#38bdf8', mb: 2.5, textTransform: 'uppercase', letterSpacing: 1 }}>
+                            ✈️ Voo & Aeronave
+                        </Typography>
 
-                            <div>
-                                <select className="flex-1 p-2 rounded-lg border" value={holdSelected} onChange={(e) => setHoldSelected(e.target.value as any)}>
-                                    <option value="H1">H1</option>
-                                    <option value="H2">H2</option>
-                                    <option value="H3">H3</option>
-                                    <option value="H4">H4</option>
-                                    <option value="H5">H5</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                            {specialLoads.map(l => (
-                                <span key={l.id} className="bg-white border text-xs px-2 py-1 rounded flex items-center gap-2 shadow-sm">
-                                    {l.type} - {l.hold}: {l.weight}kg <button onClick={() => setSpecialLoads(specialLoads.filter(i => i.id !== l.id))} className="text-red-500 font-black px-1">X</button>
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {dist && (
-                    <div className="bg-slate-900 border border-slate-700 rounded-lg overflow-hidden shadow-2xl mt-4">
-                        <hr />
-                        <div className="w-full bg-slate-800 border-b border-slate-700 p-4">
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    {dist.hint && (
-                                        <div className="bg-blue-900/30 text-blue-400 px-3 py-1 rounded mb-2">
-                                            <p className="text-[10px] font-bold uppercase tracking-widest">💡 Dica:</p>
-                                            <p className="text-[10px] font-bold uppercase tracking-widest">{dist.hint}</p>
-                                        </div>
-                                    )}
-                                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Peso Médio</p>
-                                    <p className="text-2xl font-black text-white">{pesoMedioReal} <small className="text-xs font-normal text-slate-500">kg</small></p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] font-black text-slate-500 uppercase">Peso total bagagem:</p>
-                                    <p className="text-sm font-bold text-slate-300">{pesoBagagemLiquido} kg</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-slate-800 p-3 border-b border-slate-700 flex justify-between items-center">
-                            <h3 className="text-blue-400 font-black tracking-widest text-lg">
-                                {company} - {aircraft}
-                            </h3>
-                            <span className="text-[10px] bg-slate-700 px-2 py-1 rounded text-slate-300 font-mono">
-                                <p>Regra: {dist.regraGeral}</p>
-                            </span>
-                        </div>
-
-                        <div className="w-full overflow-x-auto">
-                            <hr />
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="bg-slate-800/50 text-[10px] uppercase tracking-wider text-slate-500 border-b border-slate-700">
-                                        <th className="p-3 text-center w-12">Ordem</th>
-                                        <th className="p-3 w-20">Porão</th>
-                                        <th className="p-3">Categoria</th>
-                                        <th className="p-3 text-right w-24">Qtd (Pcs)</th>
-                                        <th className="p-3 text-right w-32">Peso (Kg)</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-800">
-                                    {dist.sequence.map((step, index) => (
-
-                                        <tr
-                                            key={index}
-                                            className={`transition-colors ${step.isSpecialOnly ? 'bg-orange-500/5' : 'hover:bg-blue-500/5'}`}
-                                        >
-                                            <td className="p-3 text-center">
-                                                <span className="text-slate-500 font-bold text-sm">{index + 1}º</span>
-                                            </td>
-                                            <td className="p-3">
-                                                <span className={`px-2 py-0.5 rounded font-black text-xs ${step.hold.includes('H1') || step.hold.includes('H2')
-                                                    ? 'bg-blue-900/40 text-blue-400 border border-blue-800'
-                                                    : 'bg-orange-900/40 text-orange-400 border border-orange-800'
-                                                    }`}>
-                                                    {step.hold}
-                                                </span>
-                                            </td>
-                                            <td className="p-3">
-                                                <span className="text-slate-300 text-sm font-medium">
-                                                    {step.ruleLabel}
-                                                </span>
-                                            </td>
-                                            <td className="p-3 text-right font-mono text-slate-400 font-bold">
-                                                {step.pcs > 0 ? step.pcs : "—"}
-                                            </td>
-                                            <td className="p-3 text-right">
-                                                <span className="text-white font-mono font-black text-lg">
-                                                    {step.weight}
-                                                    <small className="text-slate-500 text-[10px] ml-1 font-normal uppercase">kg</small>
-                                                </span>
-                                            </td>
-                                        </tr>
+                        <Stack spacing={2.5}>
+                            <FormControl fullWidth size="small">
+                                <InputLabel id="company-label" sx={{ color: '#94a3b8' }}>Companhia</InputLabel>
+                                <Select
+                                    labelId="company-label"
+                                    value={company}
+                                    label="Companhia"
+                                    onChange={(e) => { setCompany(e.target.value as any); setAircraft(""); }}
+                                    sx={{ color: '#fff', '.MuiOutlinedInput-notchedOutline': { borderColor: '#475569' } }}
+                                >
+                                    <MenuItem value=""><em>Selecione a Companhia...</em></MenuItem>
+                                    {Object.entries(companies).map(([code, c]) => (
+                                        <MenuItem key={code} value={code}>{code} - {c.name}</MenuItem>
                                     ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                </Select>
+                            </FormControl>
 
-                        <div className="bg-white rounded-3xl p-6 text-slate-900 shadow-2xl space-y-6">
-                            <div className="flex items-center justify-between border-b pb-4">
-                                <h3 className="font-black text-xl flex items-center gap-2">
-                                    <span className="text-green-500">✅</span> CONFERÊNCIA
-                                </h3>
-                                <span className="text-[10px] font-bold bg-slate-100 px-2 py-1 rounded text-slate-400">FINAL CHECK</span>
-                            </div>
+                            <FormControl fullWidth size="small" disabled={!company}>
+                                <InputLabel id="aircraft-label" sx={{ color: '#94a3b8' }}>Aeronave</InputLabel>
+                                <Select
+                                    labelId="aircraft-label"
+                                    value={aircraft}
+                                    label="Aeronave"
+                                    onChange={(e) => setAircraft(e.target.value)}
+                                    sx={{ color: '#fff', '.MuiOutlinedInput-notchedOutline': { borderColor: '#475569' } }}
+                                >
+                                    <MenuItem value=""><em>Selecione a Aeronave...</em></MenuItem>
+                                    {company && companies[company].aircrafts.map(a => (
+                                        <MenuItem key={a} value={a}>{a}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
 
-                            <div>
-                                <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Peças Totais (Bags):</p>
-                                <p className="text-lg font-mono font-bold text-slate-700">
-                                    <span className="text-blue-600">{totalPcsGeral} pcs</span> ✔️
-                                </p>
-                            </div>
+                            <Grid container spacing={2}>
+                                <Grid size={{ xs: 6 }}>
+                                    <TextField
+                                        fullWidth
+                                        size="small"
+                                        label="Peso Total Bruto (kg)"
+                                        type="number"
+                                        value={pesoTotal}
+                                        onChange={(e) => setPesoTotal(e.target.value === "" ? "" : Number(e.target.value))}
+                                        sx={{
+                                            borderRadius: 1,
+                                            '& .MuiInputBase-input': { color: '#f8fafc' },
+                                            '& .MuiInputLabel-root': { color: '#94a3b8' },
+                                            '& .MuiInputLabel-root.Mui-focused': { color: '#38bdf8' },
+                                            '& .MuiOutlinedInput-notchedOutline': { borderColor: '#475569' },
+                                            '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#38bdf8' }
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid size={{ xs: 6 }}>
+                                    <TextField
+                                        fullWidth
+                                        size="small"
+                                        label="Total Bags (pcs)"
+                                        type="number"
+                                        value={totalBags}
+                                        onChange={(e) => setTotalBags(e.target.value === "" ? "" : Number(e.target.value))}
+                                        sx={{
+                                            borderRadius: 1,
+                                            '& .MuiInputBase-input': { color: '#f8fafc' },
+                                            '& .MuiInputLabel-root': { color: '#94a3b8' },
+                                            '& .MuiInputLabel-root.Mui-focused': { color: '#38bdf8' },
+                                            '& .MuiOutlinedInput-notchedOutline': { borderColor: '#475569' },
+                                            '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#38bdf8' }
+                                        }}
+                                    />
+                                </Grid>
+                            </Grid>
 
+                            {totalBags !== "" && (
+                                <Chip
+                                    label={`Peso Médio: ${pesoMedioReal} kg`}
+                                    color="info"
+                                    variant="outlined"
+                                    sx={{ fontWeight: 'bold', alignSelf: 'flex-start' }}
+                                />
+                            )}
+                        </Stack>
+                    </Paper>
+                </Grid>
+
+                {/* 2. CARGAS ESPECIAIS */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <Paper
+                        elevation={4}
+                        sx={{
+                            p: 3,
+                            bgcolor: '#1e293b',
+                            color: '#f8fafc',
+                            borderRadius: 3,
+                            border: '1px solid #334155'
+                        }}
+                    >
+                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#38bdf8', mb: 2.5, textTransform: 'uppercase', letterSpacing: 1 }}>
+                            📦 Cargas Especiais
+                        </Typography>
+
+                        <Grid container spacing={1.5} sx={{ mb: 2, alignItems: 'center' }}>
+                            <Grid size={{ xs: 12, sm: 5 }}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel id="special-type-label" sx={{ color: '#94a3b8' }}>Tipo</InputLabel>
+                                    <Select
+                                        labelId="special-type-label"
+                                        value={tempType}
+                                        label="Tipo"
+                                        onChange={(e) => setTempType(e.target.value as any)}
+                                        sx={{ color: '#fff', '.MuiOutlinedInput-notchedOutline': { borderColor: '#475569' } }}
+                                    >
+                                        <MenuItem value="AVIH">AVIH - Animals in Hold</MenuItem>
+                                        <MenuItem value="WCMP">WCMP - Cadeira manual</MenuItem>
+                                        <MenuItem value="WCBD">WCBD - Cadeira bateria seca</MenuItem>
+                                        <MenuItem value="WCBW">WCBW - Cadeira bateria molhada</MenuItem>
+                                        <MenuItem value="WCLB">WCLB - Cadeira bateria lítio</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+
+                            <Grid size={{ xs: 6, sm: 2.5 }}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel id="hold-select-label" sx={{ color: '#94a3b8' }}>Porão</InputLabel>
+                                    <Select
+                                        labelId="hold-select-label"
+                                        value={holdSelected}
+                                        label="Porão"
+                                        onChange={(e) => setHoldSelected(e.target.value as any)}
+                                        sx={{ color: '#fff', '.MuiOutlinedInput-notchedOutline': { borderColor: '#475569' } }}
+                                    >
+                                        <MenuItem value="H1">H1</MenuItem>
+                                        <MenuItem value="H2">H2</MenuItem>
+                                        <MenuItem value="H3">H3</MenuItem>
+                                        <MenuItem value="H4">H4</MenuItem>
+                                        <MenuItem value="H5">H5</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+
+                            <Grid size={{ xs: 6, sm: 2.5 }}>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    label="kg"
+                                    type="number"
+                                    value={tempWeight}
+                                    onChange={(e) => setTempWeight(e.target.value === "" ? "" : Number(e.target.value))}
+                                    sx={{
+                                        borderRadius: 1,
+                                        '& .MuiInputBase-input': { color: '#f8fafc' },
+                                        '& .MuiInputLabel-root': { color: '#94a3b8' },
+                                        '& .MuiInputLabel-root.Mui-focused': { color: '#38bdf8' },
+                                        '& .MuiOutlinedInput-notchedOutline': { borderColor: '#475569' },
+                                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#38bdf8' }
+                                    }}
+                                />
+                            </Grid>
+
+                            <Grid size={{ xs: 12, sm: 2 }}>
+                                <Button
+                                    fullWidth
+                                    variant="contained"
+                                    disableElevation
+                                    onClick={handleAddSpecialLoad}
+                                    sx={{ height: 40, fontWeight: 'bold', bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' } }}
+                                >
+                                    ADD
+                                </Button>
+                            </Grid>
+                        </Grid>
+
+                        {/* Chips de Cargas Adicionadas */}
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, minHeight: 48, p: 1.5, bgcolor: '#0f172a', borderRadius: 2, border: '1px solid #334155' }}>
+                            {specialLoads.length === 0 ? (
+                                <Typography variant="caption" sx={{ color: '#64748b', fontStyle: 'italic', m: 'auto' }}>
+                                    Nenhuma carga especial vinculada.
+                                </Typography>
+                            ) : (
+                                specialLoads.map(l => (
+                                    <Chip
+                                        key={l.id}
+                                        label={`${l.type} - ${l.hold}: ${l.weight}kg`}
+                                        onDelete={() => setSpecialLoads(specialLoads.filter(i => i.id !== l.id))}
+                                        size="small"
+                                        sx={{ bgcolor: '#334155', color: '#f8fafc', fontWeight: 600, '& .MuiChip-deleteIcon': { color: '#f87171' } }}
+                                    />
+                                ))
+                            )}
+                        </Box>
+                    </Paper>
+                </Grid>
+            </Grid>
+
+            {/* PAINEL DE RESULTADOS DA DISTRIBUIÇÃO */}
+            {dist && (
+                <Paper
+                    elevation={6}
+                    sx={{
+                        bgcolor: '#1e293b',
+                        color: '#f8fafc',
+                        borderRadius: 3,
+                        overflow: 'hidden',
+                        border: '1px solid #334155'
+                    }}
+                >
+                    {/* Cabeçalho de Dica e Indicadores */}
+                    <Box sx={{ p: 3, bgcolor: '#0f172a', borderBottom: '1px solid #334155' }}>
+                        {dist.hint && (
+                            <Alert severity="info" sx={{ mb: 2.5, bgcolor: '#1e3a8a', color: '#93c5fd', border: '1px solid #1d4ed8' }}>
+                                <Typography variant="caption" sx={{ fontWeight: 'bold', display: 'block', letterSpacing: 0.5 }}>💡 DICA DE CARREGAMENTO:</Typography>
+                                <Typography variant="body2">{dist.hint}</Typography>
+                            </Alert>
+                        )}
+
+                        <Grid container spacing={2} sx={{ alignItems: 'center' }}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <Typography variant="caption" sx={{ color: '#38bdf8', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 }}>
+                                    Peso Médio Calculado
+                                </Typography>
+                                <Typography variant="h3" sx={{ fontWeight: 900, color: '#fff' }}>
+                                    {pesoMedioReal} <Typography component="span" variant="body1" sx={{ color: '#64748b' }}>kg</Typography>
+                                </Typography>
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 6 }} sx={{ textAlign: { sm: 'right' } }}>
+                                <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase' }}>
+                                    Peso Total Bagagem Líquido
+                                </Typography>
+                                <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#cbd5e1' }}>
+                                    {pesoBagagemLiquido} kg
+                                </Typography>
+                            </Grid>
+                        </Grid>
+                    </Box>
+
+                    {/* Identificação do Voo & Regra Aplicada */}
+                    <Box sx={{ p: 2, px: 2, bgcolor: '#1e293b', borderBottom: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="h6" sx={{ color: '#38bdf8', fontWeight: 650, letterSpacing: 0.1 }}>
+                            {company} — {aircraft}
+                        </Typography>
+                        <Chip
+                            label={`Regra: ${dist.regraGeral}`}
+                            size="small"
+                            sx={{
+                                bgcolor: '#334155',
+                                color: '#cbd5e1',
+                                fontFamily: 'monospace',
+                                fontWeight: 'bold',
+                                height: 'auto', // Permite que a altura se ajuste ao conteúdo
+                                maxWidth: '100%', // Impede que o chip ultrapasse a largura do container
+                                '& .MuiChip-label': {
+                                    display: 'block',
+                                    whiteSpace: 'normal', // Habilita a quebra automática de linha
+                                    py: 0.75,
+                                    px: 1.25,
+                                    lineHeight: 1.3
+                                }
+                            }}
+                        />
+                    </Box>
+
+                    {/* Tabela da Sequência de Carregamento */}
+                    <TableContainer>
+                        <Table size="small">
+                            <TableHead sx={{ bgcolor: '#0f172a' }}>
+                                <TableRow>
+                                    <TableCell sx={{ color: '#64748b', fontWeight: 'bold', width: 70, textAlign: 'center' }}>ORDEM</TableCell>
+                                    <TableCell sx={{ color: '#64748b', fontWeight: 'bold', width: 100 }}>PORÃO</TableCell>
+                                    <TableCell sx={{ color: '#64748b', fontWeight: 'bold' }}>CATEGORIA</TableCell>
+                                    <TableCell align="right" sx={{ color: '#64748b', fontWeight: 'bold', width: 120 }}>QTD (PCS)</TableCell>
+                                    <TableCell align="right" sx={{ color: '#64748b', fontWeight: 'bold', width: 140 }}>PESO (KG)</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {dist.sequence.map((step, index) => {
+                                    const isFrontHold = step.hold.includes('H1') || step.hold.includes('H2');
+                                    return (
+                                        <TableRow
+                                            key={index}
+                                            sx={{
+                                                bgcolor: step.isSpecialOnly ? 'rgba(249, 115, 22, 0.08)' : 'transparent',
+                                                '&:hover': { bgcolor: 'rgba(56, 189, 248, 0.05)' },
+                                                borderBottom: '1px solid #334155'
+                                            }}
+                                        >
+                                            <TableCell align="center" sx={{ color: '#94a3b8', fontWeight: 'bold' }}>
+                                                {index + 1}º
+                                            </TableCell>
+                                            <TableCell>
+                                                <Chip
+                                                    label={step.hold}
+                                                    size="small"
+                                                    sx={{
+                                                        fontWeight: 900,
+                                                        bgcolor: isFrontHold ? 'rgba(30, 58, 138, 0.6)' : 'rgba(124, 45, 18, 0.6)',
+                                                        color: isFrontHold ? '#60a5fa' : '#fb923c',
+                                                        border: `1px solid ${isFrontHold ? '#1e40af' : '#9a3412'}`
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell sx={{ color: '#e2e8f0', fontWeight: 500 }}>
+                                                {step.ruleLabel}
+                                            </TableCell>
+                                            <TableCell align="right" sx={{ color: '#94a3b8', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                                                {step.pcs > 0 ? step.pcs : "—"}
+                                            </TableCell>
+                                            <TableCell align="right" sx={{ color: '#fff', fontFamily: 'monospace', fontWeight: 900, fontSize: '1.05rem' }}>
+                                                {step.weight} <Typography component="span" variant="caption" sx={{ color: '#64748b' }}>KG</Typography>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+
+                    {/* Cartão de Conferência Final (Destaque Claro para Leitura Rápida) */}
+                    <Paper elevation={0} sx={{ m: 3, p: 3, bgcolor: '#ffffff', color: '#0f172a', borderRadius: 3 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', pb: 1.5, mb: 2 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 900, color: '#166534', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                ✅ CONFERÊNCIA
+                            </Typography>
+                            <Chip label="FINAL CHECK" size="small" sx={{ fontWeight: 'bold', bgcolor: '#f1f5f9', color: '#64748b' }} />
+                        </Box>
+
+                        <Grid container spacing={2} sx={{ mb: 2 }}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <Typography variant="caption" sx={{ fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+                                    Peças Totais (Bags)
+                                </Typography>
+                                <Typography variant="h6" sx={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#0284c7' }}>
+                                    {totalPcsGeral} pcs ✔️
+                                </Typography>
+                            </Grid>
 
                             {specialStepWeights.length > 0 && (
-                                <div>
-                                    <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Peso Bruto Total:</p>
-                                    <p className="text-lg font-mono font-bold leading-tight text-slate-700">
-                                        {pesoBagagemLiquido} + {specialStepWeights.length > 0 ? specialStepWeights.join(" + ") : 0} = <span className="text-green-600">{pesoTotalInput} kg</span> ✔️
-                                    </p>
-                                </div>
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <Typography variant="caption" sx={{ fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+                                        Peso Bruto Total
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#15803d' }}>
+                                        {pesoBagagemLiquido} + {specialStepWeights.join(" + ")} = {pesoTotalInput} kg ✔️
+                                    </Typography>
+                                </Grid>
                             )}
+                        </Grid>
 
+                        <Divider sx={{ my: 2 }} />
 
-                            <p>Informações completas:</p>
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase">Bagagem</p>
-                                    <p className="font-bold">{totalBags} pcs / {pesoBagagemLiquido} kg</p>
-                                </div>
-                                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase">Especiais (AVIH/WCH)</p>
-                                </div>
-                            </div>
+                        <Grid container spacing={2} sx={{ mb: 2 }}>
+                            <Grid size={{ xs: 6 }}>
+                                <Box sx={{ p: 1.5, bgcolor: '#f8fafc', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                                    <Typography variant="caption" sx={{ fontWeight: 800, color: '#64748b', textTransform: 'uppercase', display: 'block' }}>Bagagem</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{totalBags} pcs / {pesoBagagemLiquido} kg</Typography>
+                                </Box>
+                            </Grid>
+                            <Grid size={{ xs: 6 }}>
+                                <Box sx={{ p: 1.5, bgcolor: '#f8fafc', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                                    <Typography variant="caption" sx={{ fontWeight: 800, color: '#64748b', textTransform: 'uppercase', display: 'block' }}>Especiais (AVIH/WCH)</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{specialLoads.length} item(ns)</Typography>
+                                </Box>
+                            </Grid>
+                        </Grid>
 
-                            <div className="space-y-1">
-                                {dist.sequence.map((step, i) => (
-                                    <div key={i} className="flex justify-between text-xs font-mono border-b border-slate-50 py-1">
-                                        <span className="text-slate-500">{step.hold}: </span>
-                                        <span className="font-bold">{step.pcs > 0 ? `${step.pcs} pcs  / ` : ""}{step.weight} kg</span>
-                                    </div>
-                                ))}
-                            </div>
-                            <p className="text-center pt-2 text-sm font-black text-slate-800">TOTAL: {totalPcsGeral} pcs / {pesoTotalInput} kg</p>
-                        </div>
+                        <Stack spacing={0.5} sx={{ mb: 2 }}>
+                            {dist.sequence.map((step, i) => (
+                                <Box key={i} sx={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', py: 0.5 }}>
+                                    <Typography variant="body2" sx={{ fontFamily: 'monospace', color: '#64748b' }}>{step.hold}:</Typography>
+                                    <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#0f172a' }}>
+                                        {step.pcs > 0 ? `${step.pcs} pcs / ` : ""}{step.weight} kg
+                                    </Typography>
+                                </Box>
+                            ))}
+                        </Stack>
 
-                        <div>
-                            <button onClick={limparDados}>Finalizar Voo / Limpar</button>
-                            <button
-                                onClick={() => setIsLdmModalOpen(true)}
-                                className="bg-slate-900 text-white px-3 py-2 rounded font-bold hover:bg-slate-700 transition"
-                            >
-                                Adicionar LDM
-                            </button>
-                        </div>
-                    </div>
+                        <Box sx={{ p: 1.5, bgcolor: '#0f172a', color: '#ffffff', borderRadius: 2, textAlign: 'center' }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
+                                TOTAL: {totalPcsGeral} pcs / {pesoTotalInput} kg
+                            </Typography>
+                        </Box>
+                    </Paper>
 
-                )}
-                <main className="mt-12 opacity-80"></main>
-                {isLdmModalOpen && (
-                    <div>
-                        <br />
-                        <LdmModal
-                            cargoData={{
-                                company: company,
-                                // Pesos
-                                h1: dist?.sequence.filter((step) => step.hold === 'H1').pop()?.weight || 0,
-                                h2: dist?.sequence.filter((step) => step.hold === 'H2').pop()?.weight || 0,
-                                h3: dist?.sequence.filter((step) => step.hold === 'H3').pop()?.weight || 0,
-                                h4: dist?.sequence.filter((step) => step.hold === 'H4').pop()?.weight || 0,
-                                h5: dist?.sequence.filter((step) => step.hold === 'H5').pop()?.weight || 0,
-                                // Peças (Opcional, usado pela Eurowings)
-                                h1Pcs: dist?.sequence.filter((step) => step.hold === 'H1').pop()?.pcs || 0,
-                                h2Pcs: dist?.sequence.filter((step) => step.hold === 'H2').pop()?.pcs || 0,
-                                h3Pcs: dist?.sequence.filter((step) => step.hold === 'H3').pop()?.pcs || 0,
-                                h4Pcs: dist?.sequence.filter((step) => step.hold === 'H4').pop()?.pcs || 0,
-                                h5Pcs: dist?.sequence.filter((step) => step.hold === 'H5').pop()?.pcs || 0
-                            }}
-                            onClose={() => setIsLdmModalOpen(false)}
-                        />
-                    </div>
-                )}
-            </div>
-        </>
+                    {/* Botões de Ação na Rodapé */}
+                    <Box sx={{ p: 2.5, px: 3, bgcolor: '#0f172a', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #334155' }}>
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={limparDados}
+                            sx={{ textTransform: 'none', fontWeight: 'bold' }}
+                        >
+                            Finalizar Voo / Limpar
+                        </Button>
+
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => setIsLdmModalOpen(true)}
+                            sx={{ textTransform: 'none', fontWeight: 'bold', px: 3, bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' } }}
+                        >
+                            Adicionar LDM
+                        </Button>
+                    </Box>
+                </Paper>
+            )}
+
+            {/* Modal LDM Preservado */}
+            {isLdmModalOpen && (
+                <LdmModal
+                    cargoData={{
+                        company: company,
+                        h1: dist?.sequence.filter((step) => step.hold === 'H1').pop()?.weight || 0,
+                        h2: dist?.sequence.filter((step) => step.hold === 'H2').pop()?.weight || 0,
+                        h3: dist?.sequence.filter((step) => step.hold === 'H3').pop()?.weight || 0,
+                        h4: dist?.sequence.filter((step) => step.hold === 'H4').pop()?.weight || 0,
+                        h5: dist?.sequence.filter((step) => step.hold === 'H5').pop()?.weight || 0,
+                        h1Pcs: dist?.sequence.filter((step) => step.hold === 'H1').pop()?.pcs || 0,
+                        h2Pcs: dist?.sequence.filter((step) => step.hold === 'H2').pop()?.pcs || 0,
+                        h3Pcs: dist?.sequence.filter((step) => step.hold === 'H3').pop()?.pcs || 0,
+                        h4Pcs: dist?.sequence.filter((step) => step.hold === 'H4').pop()?.pcs || 0,
+                        h5Pcs: dist?.sequence.filter((step) => step.hold === 'H5').pop()?.pcs || 0
+                    }}
+                    onClose={() => setIsLdmModalOpen(!isLdmModalOpen)} open={isLdmModalOpen} />
+            )}
+        </Container>
     );
 }
