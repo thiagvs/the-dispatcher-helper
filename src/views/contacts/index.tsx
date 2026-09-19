@@ -13,7 +13,6 @@ import {
 } from '@mui/material';
 import {
   Search as SearchIcon,
-  Phone as PhoneIcon,
   Radio as RadioIcon,
   Business as BusinessIcon,
   Email as EmailIcon,
