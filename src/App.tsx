@@ -1,13 +1,14 @@
+import Footer from "./components/customFooter";
 import MainLayout from "./layout";
-import AuthWrapper from "./views/login";
 
 function App() {
   return (
-    <AuthWrapper>
+    // <AuthWrapper>
       <div className="min-h-screen flex flex-col">
         <MainLayout />
+        <Footer />
       </div>
-    </AuthWrapper>
+    // </AuthWrapper>
 
   );
 }
